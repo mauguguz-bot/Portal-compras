@@ -853,6 +853,10 @@ const State = {
   misHistorialPeriodo: 'todos',
   misHistorialFechaRef: new Date().toISOString().slice(0,10),
   concentradosParaHistorial: [],
+  resumenPeriodo: 'mes',
+  resumenFechaRef: new Date().toISOString().slice(0,10),
+  resumenFiltroEmpresa: 'todas',
+  resumenFiltroSucursal: 'todas',
   unsubCatalog: null,
   unsubReq: null,
   unsubAll: null,
@@ -1274,7 +1278,7 @@ function renderCompras(){
   root.innerHTML = '';
 
   const tabbar = el('div',{class:'tabbar'},[]);
-  const tabs = [['dashboard','Requisiciones'],['catalogo','Catálogo de productos']];
+  const tabs = [['dashboard','Requisiciones'],['resumen','Resumen ejecutivo'],['catalogo','Catálogo de productos']];
   tabs.forEach(([id,label])=>{
     const b = el('button',{class: (State.comprasTab||'dashboard')===id?'active':''},[label]);
     b.addEventListener('click', ()=>{ State.comprasTab = id; renderCompras(); });
@@ -1284,6 +1288,10 @@ function renderCompras(){
 
   if((State.comprasTab||'dashboard')==='catalogo'){
     root.appendChild(renderCatalogAdmin());
+    return;
+  }
+  if((State.comprasTab||'dashboard')==='resumen'){
+    root.appendChild(renderResumenEjecutivo());
     return;
   }
 
@@ -1437,7 +1445,7 @@ async function generarConcentrado(){
   const seleccionadas = State.allReqs.filter(r=> ids.includes(r.id));
   if(seleccionadas.length===0) return;
   const snapshot = seleccionadas.map(r=>({ id:r.id, empresa:r.empresa, sucursal:r.sucursal, puesto:r.puesto, responsable:r.responsable, items:r.items, observaciones:r.observaciones||'' }));
-  const data = { creadoEn: new Date().toISOString(), generadoPor: State.identity? State.identity.responsable : 'Compras', requisicionIds: ids, snapshot, estadoCompra:'pendiente', comprados:{} };
+  const data = { creadoEn: new Date().toISOString(), generadoPor: State.identity? State.identity.responsable : 'Compras', requisicionIds: ids, snapshot, estadoCompra:'pendiente', comprados:{}, montos:{} };
   const concentradoId = await Store.createConcentrado(data);
   for(const r of seleccionadas){
     await Store.saveRequisicion(r.id, Object.assign({}, r, { estado:'en_concentrado', concentradoId, actualizadoEn:new Date().toISOString() }));
@@ -1469,6 +1477,16 @@ async function agregarAConcentrado(c, reqId){
   await Store.updateConcentrado(c.id, Object.assign({}, c, { snapshot:nuevoSnapshot, requisicionIds:nuevosIds }));
   await Store.saveRequisicion(reqId, Object.assign({}, req, { estado:'en_concentrado', concentradoId:c.id, actualizadoEn:new Date().toISOString() }));
   toast('Requisición rezagada agregada al concentrado.');
+}
+
+async function guardarMontoLinea(c, lineKey, monto){
+  const montos = Object.assign({}, c.montos||{});
+  if(monto>0) montos[lineKey] = monto; else delete montos[lineKey];
+  await Store.updateConcentrado(c.id, Object.assign({}, c, { montos }));
+}
+
+function fmtMoney(n){
+  return '$'+(Number(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
 async function toggleLineaComprada(c, lineKey, checked){
@@ -1613,7 +1631,8 @@ function renderConcentradoDetalle(c){
       inner.appendChild(el('h4',{},[proveedor]));
       Object.keys(tree[empresa][proveedor]).forEach(rubro=>{
         const bucket = tree[empresa][proveedor][rubro];
-        const t = el('table',{},[el('tr',{},[el('th',{style:'width:34px;'},['✓']),el('th',{},[rubro]),el('th',{},['Total a comprar']),el('th',{},['Desglose por sucursal / puesto'])])]);
+        const montos = c.montos||{};
+        const t = el('table',{},[el('tr',{},[el('th',{style:'width:34px;'},['✓']),el('th',{},[rubro]),el('th',{},['Total a comprar']),el('th',{},['Desglose por sucursal / puesto']),el('th',{style:'width:110px;'},['Monto ($)'])])]);
         Object.entries(bucket).forEach(([bucketKey,row])=>{
           const lineKey = empresa+'||'+proveedor+'||'+rubro+'||'+bucketKey;
           const yaComprado = !!comprados[lineKey];
@@ -1631,15 +1650,24 @@ function renderConcentradoDetalle(c){
           }
           const cb = el('input',{type:'checkbox', class:'linea-checkbox', title:'Marcar como comprado'});
           cb.checked = yaComprado;
+          const montoInput = el('input',{type:'number', min:'0', step:'0.01', placeholder:'0.00', title:'Monto total pagado por esta línea'});
+          montoInput.style.cssText = 'width:100%;padding:6px 8px;border-radius:7px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-family:IBM Plex Mono,monospace;text-align:right;font-size:12.5px;';
+          if(montos[lineKey]) montoInput.value = montos[lineKey];
+          montoInput.addEventListener('change', async ()=>{
+            await guardarMontoLinea(c, lineKey, parseFloat(montoInput.value)||0);
+            toast('Monto guardado.');
+          });
           cb.addEventListener('change', async ()=>{
             cb.disabled = true;
             await toggleLineaComprada(c, lineKey, cb.checked);
+            if(cb.checked) montoInput.focus();
           });
           const tr = el('tr',{class: yaComprado ? 'linea-comprada':''},[
             el('td',{},[cb]),
             el('td',{},[el('span',{class:'prod-nombre'},[row.producto]), el('span',{style:'display:block;color:var(--ink-faint);font-size:11px;'},[[...row.responsables].join(', ')])]),
             el('td',{class:'mono', style:'font-size:16px;font-weight:600;white-space:nowrap;'},[String(row.cantidad)+' '+row.unidad]),
             el('td',{},[desglose]),
+            el('td',{},[montoInput]),
           ]);
           t.appendChild(tr);
         });
@@ -1650,6 +1678,222 @@ function renderConcentradoDetalle(c){
     wrap.appendChild(details);
   });
   return wrap;
+}
+
+/* =====================================================================
+   RESUMEN EJECUTIVO (totales de gasto para dirección / contabilidad)
+   ===================================================================== */
+
+function sucursalesDisponibles(){
+  // Mismo formato de etiqueta que usa agrupar(): "Sucursal · Puesto"
+  return [...new Set(AREAS.map(a=> a.sucursal+' · '+a.puesto))];
+}
+
+function calcularTotales(concentrados, filtroEmpresa, filtroSucursal){
+  filtroEmpresa = filtroEmpresa || 'todas';
+  filtroSucursal = filtroSucursal || 'todas';
+  const totales = { general:0, porRubro:{}, porProveedor:{}, porEmpresa:{}, porSucursal:{}, lineasConMonto:0, lineasTotal:0 };
+  concentrados.forEach(c=>{
+    const tree = agrupar(c.snapshot);
+    const montos = c.montos||{};
+    Object.keys(tree).forEach(empresa=>{
+      if(filtroEmpresa!=='todas' && empresa!==filtroEmpresa) return;
+      Object.keys(tree[empresa]).forEach(proveedor=>{
+        Object.keys(tree[empresa][proveedor]).forEach(rubro=>{
+          Object.entries(tree[empresa][proveedor][rubro]).forEach(([bucketKey,row])=>{
+            const lineKey = empresa+'||'+proveedor+'||'+rubro+'||'+bucketKey;
+            const monto = montos[lineKey];
+            const totalCant = row.cantidad || 0;
+
+            if(filtroSucursal==='todas'){
+              totales.lineasTotal++;
+              if(!monto) return;
+              totales.lineasConMonto++;
+              totales.general += monto;
+              totales.porRubro[rubro] = (totales.porRubro[rubro]||0) + monto;
+              totales.porProveedor[proveedor] = (totales.porProveedor[proveedor]||0) + monto;
+              totales.porEmpresa[empresa] = (totales.porEmpresa[empresa]||0) + monto;
+              // Prorrateado por sucursal según qué proporción de la cantidad total pidió cada una
+              // (el monto se captura una sola vez por línea, no por sucursal individual).
+              if(totalCant>0){
+                Object.entries(row.porSucursal).forEach(([suc,cant])=>{
+                  totales.porSucursal[suc] = (totales.porSucursal[suc]||0) + monto*(cant/totalCant);
+                });
+              }
+            } else {
+              const cantSuc = row.porSucursal[filtroSucursal] || 0;
+              if(cantSuc<=0) return; // esta línea no incluye a la sucursal filtrada
+              totales.lineasTotal++;
+              if(!monto) return;
+              totales.lineasConMonto++;
+              const parte = totalCant>0 ? monto*(cantSuc/totalCant) : 0;
+              totales.general += parte;
+              totales.porRubro[rubro] = (totales.porRubro[rubro]||0) + parte;
+              totales.porProveedor[proveedor] = (totales.porProveedor[proveedor]||0) + parte;
+              totales.porEmpresa[empresa] = (totales.porEmpresa[empresa]||0) + parte;
+              totales.porSucursal[filtroSucursal] = (totales.porSucursal[filtroSucursal]||0) + parte;
+            }
+          });
+        });
+      });
+    });
+  });
+  return totales;
+}
+
+function etiquetaPeriodo(periodo, fechaRef){
+  if(periodo==='todos') return 'Todo el historial';
+  if(periodo==='dia') return 'Día: '+fechaRef;
+  if(periodo==='semana') return 'Semana de: '+fechaRef;
+  if(periodo==='mes') return 'Mes de: '+fechaRef;
+  return periodo;
+}
+
+function renderResumenEjecutivo(){
+  const wrap = el('div',{},[]);
+  wrap.appendChild(el('p',{style:'color:var(--ink-dim);font-size:13px;margin:0 0 18px;'},['Vista para dirección y contabilidad: cuánto se ha gastado y en qué. Los montos vienen de lo que compras captura al marcar cada línea como comprada, en la pestaña "Requisiciones".']));
+
+  const periodoFilter = el('select',{},[
+    el('option',{value:'todos'},['Todo el historial']),
+    el('option',{value:'dia'},['Un día']),
+    el('option',{value:'semana'},['Una semana']),
+    el('option',{value:'mes'},['Un mes']),
+  ]);
+  periodoFilter.value = State.resumenPeriodo;
+  const fechaRefInput = el('input',{type:'date'});
+  fechaRefInput.value = State.resumenFechaRef;
+  fechaRefInput.hidden = State.resumenPeriodo==='todos';
+  periodoFilter.addEventListener('change', ()=>{ State.resumenPeriodo = periodoFilter.value; renderCompras(); });
+  fechaRefInput.addEventListener('change', ()=>{ State.resumenFechaRef = fechaRefInput.value; renderCompras(); });
+
+  const empresaFilter = el('select',{},[]);
+  ['todas',...Object.keys(EMPRESAS)].forEach(k=> empresaFilter.appendChild(el('option',{value:k},[k==='todas'?'Todas las empresas':EMPRESAS[k].label])));
+  empresaFilter.value = State.resumenFiltroEmpresa;
+  empresaFilter.addEventListener('change', ()=>{ State.resumenFiltroEmpresa = empresaFilter.value; renderCompras(); });
+
+  const sucursalFilter = el('select',{},[]);
+  sucursalFilter.appendChild(el('option',{value:'todas'},['Todas las sucursales / puestos']));
+  sucursalesDisponibles().forEach(s=> sucursalFilter.appendChild(el('option',{value:s},[s])));
+  sucursalFilter.value = State.resumenFiltroSucursal;
+  sucursalFilter.addEventListener('change', ()=>{ State.resumenFiltroSucursal = sucursalFilter.value; renderCompras(); });
+
+  wrap.appendChild(el('div',{class:'toolbar'},[periodoFilter, fechaRefInput, empresaFilter, sucursalFilter]));
+
+  const concentradosFiltrados = State.concentrados.filter(c=> enPeriodo(c.creadoEn, State.resumenPeriodo, State.resumenFechaRef));
+  const totales = calcularTotales(concentradosFiltrados, State.resumenFiltroEmpresa, State.resumenFiltroSucursal);
+
+  const contexto = {
+    periodoLabel: etiquetaPeriodo(State.resumenPeriodo, State.resumenFechaRef),
+    empresaLabel: State.resumenFiltroEmpresa==='todas' ? 'Todas las empresas' : EMPRESAS[State.resumenFiltroEmpresa].label,
+    sucursalLabel: State.resumenFiltroSucursal==='todas' ? 'Todas las sucursales / puestos' : State.resumenFiltroSucursal,
+  };
+
+  const btnExcel = el('button',{class:'btn btn-ghost'},['⬇ Descargar Excel']);
+  const btnPdf = el('button',{class:'btn btn-ghost'},['⬇ Descargar PDF']);
+  btnExcel.disabled = totales.general===0;
+  btnPdf.disabled = totales.general===0;
+  btnExcel.addEventListener('click', ()=> exportResumenExcel(totales, contexto));
+  btnPdf.addEventListener('click', ()=> exportResumenPdf(totales, contexto));
+  wrap.appendChild(el('div',{style:'display:flex;gap:10px;margin:0 0 18px;'},[btnExcel, btnPdf]));
+
+  wrap.appendChild(el('div',{class:'stat-row'},[
+    el('div',{class:'stat'},[el('div',{class:'num'},[fmtMoney(totales.general)]), el('div',{class:'lbl'},['Total gastado'])]),
+    el('div',{class:'stat'},[el('div',{class:'num'},[String(concentradosFiltrados.length)]), el('div',{class:'lbl'},['Concentrados en el periodo'])]),
+    el('div',{class:'stat'},[el('div',{class:'num'},[totales.lineasTotal ? Math.round(100*totales.lineasConMonto/totales.lineasTotal)+'%' : '—']), el('div',{class:'lbl'},['Líneas con monto capturado'])]),
+  ]));
+
+  if(totales.lineasTotal===0){
+    wrap.appendChild(el('div',{class:'empty-note'},['No hay concentrados con este filtro.']));
+    return wrap;
+  }
+  if(totales.general===0){
+    wrap.appendChild(el('div',{class:'hint-banner'},[el('span',{},['💡']), el('div',{},['Todavía no se ha capturado ningún monto. Ve a la pestaña "Requisiciones", abre un concentrado y anota el monto ($) junto a cada línea conforme la vayas comprando.'])]));
+    return wrap;
+  }
+
+  function tablaDesglose(titulo, mapa){
+    const entries = Object.entries(mapa).sort((a,b)=> b[1]-a[1]);
+    const t = el('table',{},[el('tr',{},[el('th',{},[titulo]),el('th',{},['Monto']),el('th',{},['% del total'])])]);
+    entries.forEach(([nombre,monto])=>{
+      t.appendChild(el('tr',{},[
+        el('td',{},[nombre]),
+        el('td',{class:'mono'},[fmtMoney(monto)]),
+        el('td',{class:'mono', style:'color:var(--ink-faint);'},[Math.round(100*monto/totales.general)+'%']),
+      ]));
+    });
+    return el('div',{class:'card', style:'margin-bottom:16px;'},[el('h3',{style:'font-size:15px;margin-bottom:12px;'},[titulo]), el('div',{class:'tablewrap'},[t])]);
+  }
+
+  wrap.appendChild(el('div',{class:'grid2'},[
+    tablaDesglose('Por rubro', totales.porRubro),
+    tablaDesglose('Por sucursal / puesto', totales.porSucursal),
+  ]));
+  wrap.appendChild(tablaDesglose('Por proveedor', totales.porProveedor));
+  wrap.appendChild(el('div',{style:'font-size:11.5px;color:var(--ink-faint);margin-top:-8px;'},['* El desglose por sucursal es proporcional a cuánto pidió cada una del total de esa línea (el monto se captura junto, no por sucursal individual).']));
+
+  return wrap;
+}
+
+function exportResumenExcel(totales, contexto){
+  try{
+    const wb = XLSX.utils.book_new();
+    const filas = [
+      ['Resumen ejecutivo de compras'],
+      ['Periodo', contexto.periodoLabel],
+      ['Empresa', contexto.empresaLabel],
+      ['Sucursal / puesto', contexto.sucursalLabel],
+      ['Total gastado', totales.general],
+      [],
+    ];
+    function agregarBloque(titulo, mapa){
+      filas.push([titulo, 'Monto', '% del total']);
+      Object.entries(mapa).sort((a,b)=>b[1]-a[1]).forEach(([nombre,monto])=>{
+        filas.push([nombre, monto, totales.general ? Math.round(100*monto/totales.general)+'%' : '0%']);
+      });
+      filas.push([]);
+    }
+    agregarBloque('Por rubro', totales.porRubro);
+    agregarBloque('Por sucursal / puesto', totales.porSucursal);
+    agregarBloque('Por proveedor', totales.porProveedor);
+    const ws = XLSX.utils.aoa_to_sheet(filas);
+    ws['!cols'] = [{wch:32},{wch:16},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Resumen ejecutivo');
+    const buf = XLSX.write(wb, { bookType:'xlsx', type:'array' });
+    Store.saveFile('resumen_ejecutivo_'+todayKey()+'.xlsx', new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}))
+      .then(()=>toast('Excel guardado.'))
+      .catch(err=>toast(err.message||'No se pudo guardar el Excel.'));
+  }catch(e){ toast('Error generando Excel: '+e.message); }
+}
+
+function exportResumenPdf(totales, contexto){
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(14); doc.text('Resumen ejecutivo de compras', 14, 16);
+    doc.setFontSize(9); doc.setTextColor(120);
+    doc.text('Periodo: '+contexto.periodoLabel, 14, 23);
+    doc.text('Empresa: '+contexto.empresaLabel+'  ·  Sucursal/puesto: '+contexto.sucursalLabel, 14, 28);
+    doc.setFontSize(16); doc.setTextColor(20);
+    doc.text('Total: '+fmtMoney(totales.general), 14, 38);
+    let y = 46;
+    function tabla(titulo, mapa){
+      const rows = Object.entries(mapa).sort((a,b)=>b[1]-a[1]).map(([nombre,monto])=>[
+        nombre, fmtMoney(monto), totales.general ? Math.round(100*monto/totales.general)+'%' : '0%'
+      ]);
+      if(rows.length===0) return;
+      doc.setFontSize(11); doc.setTextColor(20); doc.text(titulo, 14, y);
+      doc.autoTable({ startY:y+2, head:[[titulo,'Monto','% del total']], body:rows, styles:{fontSize:8}, margin:{left:14,right:14}, theme:'grid' });
+      y = doc.lastAutoTable.finalY + 12;
+      if(y>250){ doc.addPage(); y=20; }
+    }
+    tabla('Por rubro', totales.porRubro);
+    tabla('Por sucursal / puesto', totales.porSucursal);
+    tabla('Por proveedor', totales.porProveedor);
+    const blob = doc.output('blob');
+    Store.saveFile('resumen_ejecutivo_'+todayKey()+'.pdf', blob)
+      .then(()=>toast('PDF guardado.'))
+      .catch(err=>toast(err.message||'No se pudo guardar el PDF.'));
+  }catch(e){ toast('Error generando PDF: '+e.message); }
 }
 
 function exportExcel(tree, c){
