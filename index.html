@@ -335,21 +335,34 @@ const firestoreDb = firebase.firestore();
 
 /* =====================================================================
    ACCESO A LA VISTA DE COMPRAS
-   Solo Elizabeth (compras corporativo) debe poder entrar a "Soy compras".
-   El link normal del mockup NO muestra ese botón. Para dárselo acceso,
-   comparte este mismo link pero agregando al final: #acceso=CLAVE_COMPRAS
-   (una sola vez, en el navegador/dispositivo que use ella normalmente —
-   después de eso el acceso se recuerda ahí y ya no hace falta escribirlo).
+   Hay dos niveles de acceso:
+   1) Acceso completo (Elizabeth / compras): puede generar concentrados,
+      marcar líneas compradas, capturar montos y ver el Resumen ejecutivo.
+      Código: COMPRAS_ACCESS_TOKEN.
+   2) Acceso de solo consulta (director / contador): entra directo al
+      Resumen ejecutivo, sin pestañas de Requisiciones ni Catálogo, y sin
+      poder marcar ni capturar nada — solo ver totales, filtrar y
+      descargar Excel/PDF. Código: COMPRAS_VIEW_TOKEN.
+   El link normal NO muestra el botón "Soy compras". Para dar acceso,
+   comparte este mismo link agregando al final: #acceso=CLAVE
+   (una sola vez, en el navegador/dispositivo que la persona use normalmente
+   — después de eso el acceso se recuerda ahí y ya no hace falta escribirlo).
    Usamos el "#" (y no "?") porque el "?" se puede perder al publicar/compartir
-   el link de este mockup; el "#" siempre lo respeta el navegador.
-   Para cambiar la clave, edita COMPRAS_ACCESS_TOKEN abajo y publica de nuevo.
+   el link; el "#" siempre lo respeta el navegador.
+   Para cambiar cualquiera de las dos claves, edita las constantes de abajo
+   y publica de nuevo.
    ===================================================================== */
 const COMPRAS_ACCESS_TOKEN = 'elizabeth-compras-2026';
 const COMPRAS_ACCESS_KEY = 'concentrado_acceso_compras';
 let COMPRAS_ACCESS_ENABLED = false;
 
+const COMPRAS_VIEW_TOKEN = 'direccion-resumen-2026';
+const COMPRAS_VIEW_KEY = 'concentrado_acceso_resumen';
+let COMPRAS_VIEW_ENABLED = false;
+
 function habilitarAccesoComprasSiAplica(){
   let habilitado = false;
+  let habilitadoSoloVista = false;
   try{
     // Buscamos el token tanto en el "hash" (#acceso=...) como en la query (?acceso=...)
     // por si el link se comparte de una forma u otra.
@@ -362,16 +375,21 @@ function habilitarAccesoComprasSiAplica(){
     if(token === COMPRAS_ACCESS_TOKEN){
       localStorage.setItem(COMPRAS_ACCESS_KEY, '1');
       habilitado = true;
+    } else if(token === COMPRAS_VIEW_TOKEN){
+      localStorage.setItem(COMPRAS_VIEW_KEY, '1');
+      habilitadoSoloVista = true;
     } else {
       habilitado = localStorage.getItem(COMPRAS_ACCESS_KEY) === '1';
+      habilitadoSoloVista = localStorage.getItem(COMPRAS_VIEW_KEY) === '1';
     }
-  }catch(e){ habilitado = false; }
-  if(habilitado){
+  }catch(e){ habilitado = false; habilitadoSoloVista = false; }
+  if(habilitado || habilitadoSoloVista){
     const btn = document.querySelector('#modeSwitch button[data-mode="compras"]');
     if(btn) btn.hidden = false;
   }
   COMPRAS_ACCESS_ENABLED = habilitado;
-  return habilitado;
+  COMPRAS_VIEW_ENABLED = habilitadoSoloVista;
+  return habilitado || habilitadoSoloVista;
 }
 
 /* =====================================================================
@@ -948,7 +966,18 @@ function renderOnboard(){
     el('div',{class:'field'},[el('label',{},['Tu nombre']), nombreInput]),
     continueBtn,
   ];
-  if(State.identity || COMPRAS_ACCESS_ENABLED) cardChildren.push(cancelBtn); // ya había identidad, o tiene acceso a compras y puede regresar ahí
+  if(State.identity || COMPRAS_ACCESS_ENABLED || COMPRAS_VIEW_ENABLED) cardChildren.push(cancelBtn); // ya había identidad, o tiene acceso a compras y puede regresar ahí
+
+  // Esta pantalla es un overlay a pantalla completa que tapa la barra superior — incluyendo el
+  // link "Acceso compras". Si alguien nuevo (director, contador, Elizabeth en un dispositivo
+  // limpio) abre el link normal sin el "#acceso=...", se quedaría atorado aquí sin poder llegar
+  // a ese link. Por eso lo repetimos también dentro de la tarjeta, siempre visible.
+  if(!COMPRAS_ACCESS_ENABLED && !COMPRAS_VIEW_ENABLED){
+    const accesoComprasLink = el('button',{class:'btn btn-ghost btn-block', style:'margin-top:14px;font-size:12.5px;'},['¿Eres de compras o dirección? Entrar con código de acceso']);
+    accesoComprasLink.addEventListener('click', mostrarModalAccesoCompras);
+    cardChildren.push(accesoComprasLink);
+  }
+
   const card = el('div',{class:'onboard-card'},cardChildren);
   root.appendChild(el('div',{class:'onboard-overlay'},[card]));
 }
@@ -1276,6 +1305,15 @@ function startCompras(){
 function renderCompras(){
   const root = document.getElementById('viewCompras');
   root.innerHTML = '';
+
+  // Acceso de solo consulta (director / contador): nada de Requisiciones ni
+  // Catálogo — directo y fijo al Resumen ejecutivo, sin poder salir de ahí.
+  if(COMPRAS_VIEW_ENABLED && !COMPRAS_ACCESS_ENABLED){
+    State.comprasTab = 'resumen';
+    root.appendChild(el('div',{style:'margin:0 0 18px;color:var(--ink-dim);font-size:13px;'},['Acceso de solo consulta.']));
+    root.appendChild(renderResumenEjecutivo());
+    return;
+  }
 
   const tabbar = el('div',{class:'tabbar'},[]);
   const tabs = [['dashboard','Requisiciones'],['resumen','Resumen ejecutivo'],['catalogo','Catálogo de productos']];
@@ -2070,7 +2108,7 @@ function irAVistaCompras(){
 
 function actualizarBotonAccesoCompras(){
   const btn = document.getElementById('btnAccesoCompras');
-  if(btn) btn.hidden = COMPRAS_ACCESS_ENABLED;
+  if(btn) btn.hidden = COMPRAS_ACCESS_ENABLED || COMPRAS_VIEW_ENABLED;
 }
 
 document.getElementById('modeSwitch').addEventListener('click', (e)=>{
@@ -2094,7 +2132,8 @@ function mostrarModalAccesoCompras(){
 
   function cerrar(){ overlay.remove(); }
   function intentar(){
-    if(input.value.trim() === COMPRAS_ACCESS_TOKEN){
+    const valor = input.value.trim();
+    if(valor === COMPRAS_ACCESS_TOKEN){
       localStorage.setItem(COMPRAS_ACCESS_KEY, '1');
       COMPRAS_ACCESS_ENABLED = true;
       const btnCompras = document.querySelector('#modeSwitch button[data-mode="compras"]');
@@ -2105,6 +2144,16 @@ function mostrarModalAccesoCompras(){
       document.getElementById('onboardRoot').innerHTML = '';
       irAVistaCompras();
       toast('Acceso de compras habilitado en este dispositivo.');
+    } else if(valor === COMPRAS_VIEW_TOKEN){
+      localStorage.setItem(COMPRAS_VIEW_KEY, '1');
+      COMPRAS_VIEW_ENABLED = true;
+      const btnCompras = document.querySelector('#modeSwitch button[data-mode="compras"]');
+      if(btnCompras) btnCompras.hidden = false;
+      actualizarBotonAccesoCompras();
+      cerrar();
+      document.getElementById('onboardRoot').innerHTML = '';
+      irAVistaCompras();
+      toast('Acceso de solo consulta habilitado en este dispositivo.');
     } else {
       errorMsg.textContent = 'Código incorrecto, intenta de nuevo.';
       input.value = '';
