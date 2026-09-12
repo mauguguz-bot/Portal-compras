@@ -1,0 +1,2279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concentrado de Compras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#F6F3ED;
+  --surface:#FFFFFF;
+  --surface-2:#EDE7DA;
+  --ink:#241F1A;
+  --ink-dim:#726A5E;
+  --ink-faint:#A69D8D;
+  --line:#DED4C2;
+  --line-strong:#C8BBA3;
+  --accent:#1F5C57;
+  --accent-ink:#F3F8F6;
+  --accent-soft:#DDEBE8;
+  --gold:#B4842A;
+  --gold-soft:#F3E6CB;
+  --danger:#A6392F;
+  --danger-soft:#F3DCD8;
+  --good:#3E7D4E;
+  --good-soft:#DCEBDF;
+  --shadow: 0 1px 2px rgba(36,31,26,.06), 0 8px 24px -12px rgba(36,31,26,.18);
+  --dantes:#A6332D;
+  --tacos:#B8871E;
+  --inglesa:#9C5A72;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1B1815;
+    --surface:#242019;
+    --surface-2:#2E2921;
+    --ink:#F3EEE4;
+    --ink-dim:#B7AC98;
+    --ink-faint:#7D7461;
+    --line:#3B342A;
+    --line-strong:#4C4335;
+    --accent:#5FB3A6;
+    --accent-ink:#0F1E1B;
+    --accent-soft:#233A35;
+    --gold:#E0B15A;
+    --gold-soft:#3A2E17;
+    --danger:#E38175;
+    --danger-soft:#3A231F;
+    --good:#7FC191;
+    --good-soft:#1F3324;
+    --dantes:#E0847E;
+    --tacos:#E0BA6B;
+    --inglesa:#D79BB2;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1B1815;
+  --surface:#242019;
+  --surface-2:#2E2921;
+  --ink:#F3EEE4;
+  --ink-dim:#B7AC98;
+  --ink-faint:#7D7461;
+  --line:#3B342A;
+  --line-strong:#4C4335;
+  --accent:#5FB3A6;
+  --accent-ink:#0F1E1B;
+  --accent-soft:#233A35;
+  --gold:#E0B15A;
+  --gold-soft:#3A2E17;
+  --danger:#E38175;
+  --danger-soft:#3A231F;
+  --good:#7FC191;
+  --good-soft:#1F3324;
+  --dantes:#E0847E;
+  --tacos:#E0BA6B;
+  --inglesa:#D79BB2;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:'IBM Plex Sans', system-ui, sans-serif;
+  font-size:14px; line-height:1.5;
+}
+h1,h2,h3{ font-family:'Zilla Slab', Georgia, serif; text-wrap:balance; margin:0; color:var(--ink); }
+.mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric:tabular-nums; }
+button{ font-family:inherit; }
+a{ color:var(--accent); }
+::selection{ background:var(--accent-soft); }
+
+/* ---------- shell ---------- */
+.topbar{
+  position:sticky; top:0; z-index:40;
+  background:var(--surface); border-bottom:1px solid var(--line);
+  padding:14px 24px; display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+}
+.brand{ display:flex; align-items:baseline; gap:10px; }
+.brand .mark{
+  width:34px; height:34px; border-radius:8px; background:var(--accent); color:var(--accent-ink);
+  display:flex; align-items:center; justify-content:center; font-family:'Zilla Slab',serif; font-weight:700; font-size:17px;
+  flex:none;
+}
+.brand h1{ font-size:19px; font-weight:600; }
+.brand .sub{ color:var(--ink-dim); font-size:12.5px; }
+.topbar .spacer{ flex:1; }
+.modeswitch{
+  display:flex; background:var(--surface-2); border-radius:10px; padding:3px; gap:2px;
+}
+.modeswitch button{
+  border:none; background:transparent; color:var(--ink-dim); padding:7px 14px; border-radius:8px;
+  font-size:13px; font-weight:600; cursor:pointer;
+}
+.modeswitch button.active{ background:var(--surface); color:var(--ink); box-shadow:var(--shadow); }
+.identity-chip{
+  display:flex; align-items:center; gap:8px; background:var(--surface-2); border-radius:10px;
+  padding:7px 12px; font-size:12.5px; color:var(--ink-dim);
+}
+.identity-chip strong{ color:var(--ink); font-weight:600; }
+.identity-chip button{
+  border:none; background:none; color:var(--accent); font-weight:600; cursor:pointer; font-size:12.5px; padding:0;
+}
+.wrap{ max-width:1180px; margin:0 auto; padding:28px 24px 80px; }
+.hint-banner{
+  background:var(--gold-soft); border:1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+  color:var(--ink); border-radius:12px; padding:12px 16px; font-size:13px; margin-bottom:22px;
+  display:flex; gap:10px; align-items:flex-start;
+}
+.hint-banner b{ color:var(--gold); }
+
+/* ---------- onboarding ---------- */
+.onboard-overlay{
+  position:fixed; inset:0; background:rgba(20,17,13,.55); display:flex; align-items:center; justify-content:center;
+  z-index:100; padding:20px;
+}
+.onboard-card{
+  background:var(--surface); border-radius:18px; box-shadow:var(--shadow); width:100%; max-width:520px;
+  padding:32px; border:1px solid var(--line);
+}
+.onboard-card h2{ font-size:23px; margin-bottom:6px; }
+.onboard-card p.lead{ color:var(--ink-dim); font-size:13.5px; margin:0 0 22px; }
+.field{ margin-bottom:16px; }
+.field label{ display:block; font-size:12.5px; font-weight:600; color:var(--ink-dim); margin-bottom:6px; letter-spacing:.02em; text-transform:uppercase; }
+.field select, .field input{
+  width:100%; padding:10px 12px; border-radius:9px; border:1px solid var(--line-strong);
+  background:var(--surface); color:var(--ink); font-size:14px; font-family:inherit;
+}
+.obs-block{ margin-top:16px; }
+.obs-block label{ display:block; font-size:11px; font-weight:600; color:var(--ink-dim); margin-bottom:6px; letter-spacing:.02em; text-transform:uppercase; }
+.obs-block textarea{
+  width:100%; min-height:64px; padding:10px 12px; border-radius:9px; border:1px solid var(--line-strong);
+  background:var(--surface); color:var(--ink); font-size:13.5px; font-family:inherit; resize:vertical;
+}
+.obs-block textarea:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+.obs-note{
+  background:var(--gold-soft); border:1px solid color-mix(in srgb, var(--gold) 35%, transparent); border-radius:10px;
+  padding:9px 12px; font-size:12.5px; color:var(--ink); margin-top:8px;
+}
+.obs-note b{ color:var(--gold); display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; margin-bottom:2px;}
+.field select:focus, .field input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+.btn{
+  border:none; border-radius:9px; padding:10px 18px; font-size:13.5px; font-weight:600; cursor:pointer;
+  display:inline-flex; align-items:center; gap:7px;
+}
+.btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.btn-primary{ background:var(--accent); color:var(--accent-ink); }
+.btn-primary:disabled{ opacity:.45; cursor:not-allowed; }
+.btn-ghost{ background:var(--surface-2); color:var(--ink); }
+.btn-danger{ background:var(--danger-soft); color:var(--danger); }
+.btn-block{ width:100%; justify-content:center; padding:12px; font-size:14px; }
+
+/* ---------- cards / layout ---------- */
+.card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:20px; }
+.grid2{ display:grid; grid-template-columns:1.1fr 1fr; gap:20px; align-items:start; }
+@media (max-width:880px){ .grid2{ grid-template-columns:1fr; } }
+.section-title{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap;}
+.section-title h2{ font-size:18px; }
+.section-title .meta{ font-size:12px; color:var(--ink-faint); }
+
+.formrow{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.formrow.three{ grid-template-columns:1fr 90px 1fr; }
+@media (max-width:560px){ .formrow, .formrow.three{ grid-template-columns:1fr; } }
+
+.chip{
+  display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:100px;
+  font-size:11.5px; font-weight:600; letter-spacing:.01em;
+}
+.chip-empresa-dantes{ background:color-mix(in srgb, var(--dantes) 16%, transparent); color:var(--dantes); }
+.chip-empresa-tacos{ background:color-mix(in srgb, var(--tacos) 20%, transparent); color:var(--tacos); }
+.chip-empresa-inglesa{ background:color-mix(in srgb, var(--inglesa) 18%, transparent); color:var(--inglesa); }
+.chip-borrador{ background:var(--surface-2); color:var(--ink-dim); }
+.chip-enviada{ background:var(--gold-soft); color:var(--gold); }
+.chip-concentrado{ background:var(--good-soft); color:var(--good); }
+.chip-pendiente-compra{ background:var(--gold-soft); color:var(--gold); }
+.chip-comprado{ background:var(--good-soft); color:var(--good); }
+tr.linea-comprada td{ opacity:.5; }
+tr.linea-comprada .prod-nombre{ text-decoration:line-through; }
+.linea-checkbox{ width:18px; height:18px; cursor:pointer; }
+
+.ticket{
+  border:1px dashed var(--line-strong); border-radius:12px; padding:16px; background:var(--surface-2);
+}
+.ticket-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; gap:10px; flex-wrap:wrap;}
+.ticket-head .who{ font-family:'Zilla Slab',serif; font-size:17px; font-weight:600; }
+.ticket-head .when{ font-size:11.5px; color:var(--ink-faint); }
+.itemline{
+  display:grid; grid-template-columns:1fr 70px 90px 1fr 32px; gap:8px; align-items:center;
+  padding:8px 0; border-bottom:1px solid var(--line);
+}
+.itemline:last-child{ border-bottom:none; }
+.itemline .name{ font-size:13.5px; }
+.itemline .name .rubro{ display:block; font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.03em; }
+.itemline input[type=number]{
+  width:100%; padding:6px 8px; border-radius:7px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink); font-family:'IBM Plex Mono',monospace; text-align:right;
+}
+.itemline select{ width:100%; padding:6px 8px; border-radius:7px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink); font-size:12.5px;}
+.itemline .unit{ font-size:12px; color:var(--ink-dim); }
+.itemline .del{ border:none; background:none; color:var(--danger); cursor:pointer; font-size:16px; line-height:1; padding:4px;}
+.empty-note{ color:var(--ink-faint); font-size:13px; padding:18px 4px; text-align:center; }
+
+table{ width:100%; border-collapse:collapse; font-size:13px; }
+th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-faint); padding:8px 10px; border-bottom:1px solid var(--line-strong); font-weight:600;}
+td{ padding:10px; border-bottom:1px solid var(--line); vertical-align:middle; }
+tr.reqrow{ cursor:pointer; }
+tr.reqrow:hover td{ background:var(--surface-2); }
+tr.reqrow.selected td{ background:var(--accent-soft); }
+.tablewrap{ overflow-x:auto; border-radius:10px; border:1px solid var(--line); }
+.tablewrap table{ min-width:640px; }
+
+.toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px;}
+.toolbar select, .toolbar input[type=search]{
+  padding:8px 11px; border-radius:8px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink); font-size:13px;
+}
+.badgecount{
+  background:var(--accent); color:var(--accent-ink); font-size:11px; font-weight:700; border-radius:100px;
+  padding:1px 7px; margin-left:6px;
+}
+
+.drawer-backdrop{ position:fixed; inset:0; background:rgba(20,17,13,.45); z-index:90; }
+.drawer{
+  position:fixed; top:0; right:0; height:100%; width:min(440px,92vw); background:var(--surface);
+  box-shadow:-16px 0 40px -20px rgba(0,0,0,.4); z-index:91; padding:24px; overflow-y:auto;
+  border-left:1px solid var(--line);
+}
+.drawer h3{ font-size:18px; margin-bottom:2px; }
+.drawer .close{ position:absolute; top:20px; right:20px; border:none; background:var(--surface-2); width:30px; height:30px; border-radius:8px; cursor:pointer; font-size:15px; color:var(--ink-dim);}
+
+.groupblock{ border:1px solid var(--line); border-radius:12px; margin-bottom:14px; overflow:hidden; }
+.groupblock > summary{
+  list-style:none; cursor:pointer; padding:12px 16px; background:var(--surface-2); display:flex; justify-content:space-between; align-items:center; font-weight:600;
+}
+.groupblock > summary::-webkit-details-marker{ display:none; }
+.groupblock > summary .n{ font-weight:400; color:var(--ink-dim); font-size:12.5px;}
+.subgroup{ padding:6px 16px 14px; }
+.subgroup h4{ font-size:12.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-faint); margin:14px 0 6px; }
+
+.tabbar{ display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:20px; }
+.tabbar button{
+  border:none; background:none; padding:10px 4px; margin-right:18px; font-size:13.5px; font-weight:600; color:var(--ink-faint); cursor:pointer;
+  border-bottom:2px solid transparent; margin-bottom:-1px;
+}
+.tabbar button.active{ color:var(--accent); border-bottom-color:var(--accent); }
+
+.catalog-admin-row{ display:grid; grid-template-columns:1.3fr 1fr 70px 1fr 32px; gap:8px; padding:7px 0; border-bottom:1px solid var(--line); align-items:center; font-size:13px;}
+.catalog-admin-row.head{ font-size:11px; text-transform:uppercase; color:var(--ink-faint); font-weight:600; letter-spacing:.03em;}
+.catalog-admin-row input, .catalog-admin-row select{ width:100%; padding:6px 8px; border-radius:6px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink); font-size:12.5px;}
+
+.stat-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-bottom:20px; }
+.stat{ background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+.stat .num{ font-family:'Zilla Slab',serif; font-size:26px; font-weight:600; }
+.stat .lbl{ font-size:11.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.03em; }
+
+.toast{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--bg);
+  padding:11px 18px; border-radius:10px; font-size:13px; z-index:200; box-shadow:var(--shadow);
+  opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(-4px); }
+
+@media (prefers-reduced-motion: reduce){ *{ transition:none !important; animation:none !important; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="mark">D</div>
+    <div>
+      <h1>Concentrado de Compras</h1>
+      <div class="sub">Dante's · Tacos de Anda · La Inglesa — Corporativo</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="modeswitch" id="modeSwitch">
+    <button data-mode="encargado" class="active">Soy encargado</button>
+    <button data-mode="compras" hidden>Soy compras</button>
+  </div>
+  <button id="btnAccesoCompras" style="border:none;background:none;color:var(--ink-faint);font-size:11.5px;cursor:pointer;text-decoration:underline;padding:2px 4px;">Acceso compras</button>
+  <div class="identity-chip" id="identityChip" hidden>
+    <span></span>
+    <button id="btnChangeIdentity">cambiar</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div id="viewEncargado"></div>
+  <div id="viewCompras" hidden></div>
+</div>
+
+<div id="onboardRoot"></div>
+<div id="drawerRoot"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<!-- Firebase (versión "compat": misma sintaxis collection/doc/onSnapshot que ya usa este archivo) -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+<script>
+/* =====================================================================
+   CONEXIÓN A FIREBASE (Corporativo Dantes / Tacos de Anda — portal-compras)
+   ===================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDDwtJ14a5zHUKTkaJU1556X0eCIfClcsU",
+  authDomain: "portal-compras-70cc2.firebaseapp.com",
+  projectId: "portal-compras-70cc2",
+  storageBucket: "portal-compras-70cc2.firebasestorage.app",
+  messagingSenderId: "279525925822",
+  appId: "1:279525925822:web:9b1735b7f545389f690fef"
+};
+firebase.initializeApp(firebaseConfig);
+const firestoreDb = firebase.firestore();
+
+/* =====================================================================
+   ACCESO A LA VISTA DE COMPRAS
+   Hay dos niveles de acceso:
+   1) Acceso completo (Elizabeth / compras): puede generar concentrados,
+      marcar líneas compradas, capturar montos y ver el Resumen ejecutivo.
+      Código: COMPRAS_ACCESS_TOKEN.
+   2) Acceso de solo consulta (director / contador): entra directo al
+      Resumen ejecutivo, sin pestañas de Requisiciones ni Catálogo, y sin
+      poder marcar ni capturar nada — solo ver totales, filtrar y
+      descargar Excel/PDF. Código: COMPRAS_VIEW_TOKEN.
+   El link normal NO muestra el botón "Soy compras". Para dar acceso,
+   comparte este mismo link agregando al final: #acceso=CLAVE
+   (una sola vez, en el navegador/dispositivo que la persona use normalmente
+   — después de eso el acceso se recuerda ahí y ya no hace falta escribirlo).
+   Usamos el "#" (y no "?") porque el "?" se puede perder al publicar/compartir
+   el link; el "#" siempre lo respeta el navegador.
+   Para cambiar cualquiera de las dos claves, edita las constantes de abajo
+   y publica de nuevo.
+   ===================================================================== */
+const COMPRAS_ACCESS_TOKEN = 'elizabeth-compras-2026';
+const COMPRAS_ACCESS_KEY = 'concentrado_acceso_compras';
+let COMPRAS_ACCESS_ENABLED = false;
+
+const COMPRAS_VIEW_TOKEN = 'direccion-resumen-2026';
+const COMPRAS_VIEW_KEY = 'concentrado_acceso_resumen';
+let COMPRAS_VIEW_ENABLED = false;
+
+function habilitarAccesoComprasSiAplica(){
+  let habilitado = false;
+  let habilitadoSoloVista = false;
+  try{
+    // Buscamos el token tanto en el "hash" (#acceso=...) como en la query (?acceso=...)
+    // por si el link se comparte de una forma u otra.
+    const hash = window.location.hash || '';
+    const hashMatch = hash.match(/[#&]acceso=([^&]+)/);
+    const tokenDeHash = hashMatch ? decodeURIComponent(hashMatch[1]) : null;
+    const params = new URLSearchParams(window.location.search);
+    const tokenDeQuery = params.get('acceso');
+    const token = tokenDeHash || tokenDeQuery;
+    if(token === COMPRAS_ACCESS_TOKEN){
+      localStorage.setItem(COMPRAS_ACCESS_KEY, '1');
+      habilitado = true;
+    } else if(token === COMPRAS_VIEW_TOKEN){
+      localStorage.setItem(COMPRAS_VIEW_KEY, '1');
+      habilitadoSoloVista = true;
+    } else {
+      habilitado = localStorage.getItem(COMPRAS_ACCESS_KEY) === '1';
+      habilitadoSoloVista = localStorage.getItem(COMPRAS_VIEW_KEY) === '1';
+    }
+  }catch(e){ habilitado = false; habilitadoSoloVista = false; }
+  if(habilitado || habilitadoSoloVista){
+    const btn = document.querySelector('#modeSwitch button[data-mode="compras"]');
+    if(btn) btn.hidden = false;
+  }
+  COMPRAS_ACCESS_ENABLED = habilitado;
+  COMPRAS_VIEW_ENABLED = habilitadoSoloVista;
+  return habilitado || habilitadoSoloVista;
+}
+
+/* =====================================================================
+   DATA: áreas de captura + catálogos reales (extraídos de tus archivos)
+   ===================================================================== */
+
+const EMPRESAS = {
+  dantes:  { label:"Dante's", cls:"chip-empresa-dantes" },
+  tacos:   { label:"Tacos de Anda", cls:"chip-empresa-tacos" },
+  inglesa: { label:"La Inglesa", cls:"chip-empresa-inglesa" },
+};
+
+// Cada "área" es una combinación empresa+sucursal+puesto que comparte un catálogo (catalogRef).
+const AREAS = [
+  { id:"tacos-produccion", empresa:"tacos", sucursal:"Sucursal única", puesto:"Encargado de producción", catalogRef:"tacos" },
+  { id:"tacos-cocina",     empresa:"tacos", sucursal:"Sucursal única", puesto:"Encargado de cocina",      catalogRef:"tacos" },
+  { id:"dantes-centro-barra",  empresa:"dantes", sucursal:"Centro",     puesto:"Encargado de barra",  catalogRef:"dantes-barra" },
+  { id:"dantes-centro-cocina", empresa:"dantes", sucursal:"Centro",     puesto:"Encargado de cocina", catalogRef:"dantes-cocina" },
+  { id:"dantes-blvd-barra",    empresa:"dantes", sucursal:"Boulevard",  puesto:"Encargado de barra",  catalogRef:"dantes-barra" },
+  { id:"dantes-blvd-cocina",   empresa:"dantes", sucursal:"Boulevard",  puesto:"Encargado de cocina", catalogRef:"dantes-cocina" },
+  { id:"dantes-centro-piso",   empresa:"dantes", sucursal:"Centro",     puesto:"Encargado de piso",   catalogRef:"dantes-piso" },
+  { id:"dantes-blvd-piso",     empresa:"dantes", sucursal:"Boulevard",  puesto:"Encargado de piso",   catalogRef:"dantes-piso" },
+  { id:"dantes-salsas",        empresa:"dantes", sucursal:"Producción central", puesto:"Chef", catalogRef:"dantes-salsas" },
+  { id:"inglesa-operativa", empresa:"inglesa", sucursal:"Cafetería · Morelia", puesto:"Encargada operativa", catalogRef:"inglesa" },
+];
+
+function seedCatalog(rows){
+  return rows.map((r,i)=>({ id:"p"+i+"_"+Math.random().toString(36).slice(2,7), rubro:r[0], nombre:r[1], unidad:r[2], proveedor:r[3]||"" }));
+}
+
+const CATALOGS_SEED = {
+  "tacos": seedCatalog([
+    ["Desechables","Ramikines","pz",""],["Desechables","Tapas de ramikin","pz",""],["Desechables","Vasos","pz",""],
+    ["Desechables","Tapas de vaso","pz",""],["Desechables","Platos grandes","pz",""],["Desechables","Platos chicos","pz",""],
+    ["Desechables","Servilletas","paq",""],["Desechables","Bolsa de asa","paq",""],
+    ["Limpieza","Sanitas","pz",""],["Limpieza","Rollos de papel","pz",""],["Limpieza","Bolsas de basura","caja",""],
+    ["Limpieza","Cloro","L",""],["Limpieza","Fabuloso","L",""],["Limpieza","Desengrasante","L",""],["Limpieza","Jabón en polvo","kg",""],
+    ["Abarrotes","Aluminio","rollo",""],["Abarrotes","Mentas","paq",""],["Abarrotes","Carbón","kg",""],["Abarrotes","Vinagre","L",""],
+    ["Abarrotes","Aceite","L",""],["Abarrotes","Arroz","kg",""],["Abarrotes","Frijol","kg",""],
+    ["Papelería","Papel para impresora","paq",""],["Papelería","Papel térmico","rollo",""],
+    ["Especias","Comino","kg",""],["Especias","Pimienta","kg",""],["Especias","Clavo","kg",""],["Especias","Orégano","kg",""],
+    ["Especias","Sazonador","kg",""],["Especias","Sal fina","kg",""],["Especias","Sal de grano","kg",""],["Especias","Ajo","kg",""],
+    ["Lácteos","Leche Clavel","lata",""],["Lácteos","Lechera","lata",""],["Lácteos","Queso Chihuahua","kg",""],["Lácteos","Queso Oaxaca","kg",""],
+    ["Carnes","Diezmillo","kg",""],["Carnes","Suadero","kg",""],["Carnes","Brisket","kg",""],["Carnes","Adobada","kg",""],
+    ["Carnes","Chorizo","kg",""],["Carnes","Lengua","kg",""],
+    ["Verduras","Habanero","kg",""],["Verduras","Tomate","kg",""],["Verduras","Jitomate","kg",""],["Verduras","Chile serrano","kg",""],
+    ["Verduras","Chile jalapeño","kg",""],["Verduras","Chile güero","kg",""],["Verduras","Chile de árbol","kg",""],
+    ["Verduras","Chile guajillo","kg",""],["Verduras","Chile pasilla","kg",""],["Verduras","Aguacate","kg",""],
+    ["Verduras","Cebolla morada","kg",""],["Verduras","Cebolla blanca","kg",""],["Verduras","Cebolla cambray","kg",""],
+    ["Verduras","Limón","kg",""],["Verduras","Pepino","kg",""],["Verduras","Rábanos","kg",""],["Verduras","Cilantro","kg",""],["Verduras","Piña","pz",""],
+  ]),
+  "dantes-barra": seedCatalog([
+    ["Licores","Centenario Plata","pz","Distribuidora de licores"],["Licores","Bacardí Patona","pz","Distribuidora de licores"],
+    ["Licores","Tanqueray","pz","Distribuidora de licores"],["Licores","Tanqueray Flor de Sevilla","pz","Distribuidora de licores"],
+    ["Licores","Smirnoff","pz","Distribuidora de licores"],["Licores","Smirnoff Tamarindo","pz","Distribuidora de licores"],
+    ["Licores","Buchanan's Two Souls","pz","Distribuidora de licores"],["Licores","Absolut","pz","Distribuidora de licores"],
+    ["Licores","Absolut Mandarin","pz","Distribuidora de licores"],["Licores","Aperol","pz","Distribuidora de licores"],
+    ["Licores","Controy","pz","Distribuidora de licores"],["Licores","London Dry Gin","pz","Distribuidora de licores"],
+    ["Licores","Don Julio Blanco","pz","Distribuidora de licores"],["Licores","Don Julio Reposado","pz","Distribuidora de licores"],
+    ["Licores","Maestro Dobel Diamante","pz","Distribuidora de licores"],["Licores","Maestro Dobel Tequilero","pz","Distribuidora de licores"],
+    ["Licores","1800 Años","pz","Distribuidora de licores"],["Licores","Bombay Sapphire","pz","Distribuidora de licores"],
+    ["Licores","Beefeater","pz","Distribuidora de licores"],["Licores","Habana 7","pz","Distribuidora de licores"],
+    ["Licores","Jack Daniel's","pz","Distribuidora de licores"],["Licores","Jack Daniel's Honey","pz","Distribuidora de licores"],
+    ["Licores","Old Parr","pz","Distribuidora de licores"],["Licores","Baileys","pz","Distribuidora de licores"],
+    ["Licores","Charanda","pz","Distribuidora de licores"],["Licores","Red Label","pz","Distribuidora de licores"],
+    ["Licores","Black Label","pz","Distribuidora de licores"],["Licores","Campari","pz","Distribuidora de licores"],
+    ["Licores","Vermouth Rosso","pz","Distribuidora de licores"],["Licores","Vermouth Cinzano","pz","Distribuidora de licores"],
+    ["Licores","Angostura","pz","Distribuidora de licores"],["Licores","Torres 5","pz","Distribuidora de licores"],
+    ["Licores","Torres 10","pz","Distribuidora de licores"],["Licores","Capitán Morgan Especiado","pz","Distribuidora de licores"],
+    ["Licores","Licor 43","pz","Distribuidora de licores"],["Licores","Licor de zarzamora","pz","Distribuidora de licores"],
+    ["Licores","Vino espumoso Brut","pz","Distribuidora de licores"],
+    ["Mezcal","400 Conejos","pz","Distribuidora de licores"],["Mezcal","La Luna Ensamble","pz","Distribuidora de licores"],
+    ["Mezcal","Profundo Amor (flaco)","pz","Distribuidora de licores"],["Mezcal","Profundo Amor (gordito)","pz","Distribuidora de licores"],
+    ["Mezcal","Don Marcelo Cupreata","pz","Distribuidora de licores"],["Mezcal","Doble M Ancestral","pz","Distribuidora de licores"],
+    ["Mezcal","Alma Sueva","pz","Distribuidora de licores"],["Mezcal","Viviente","pz","Distribuidora de licores"],
+    ["Mezcal","Hermanos Álvarez Ensamble","pz","Distribuidora de licores"],["Mezcal","Negro Corazón Espadín","pz","Distribuidora de licores"],
+    ["Mezcal / cerveza artesanal","Cerveza Fortuna Sake","cartón","Cervecería artesanal"],
+    ["Mezcal / cerveza artesanal","Cerveza Fortuna Lager","cartón","Cervecería artesanal"],
+    ["Whisky","JW Red Label","pz","Distribuidora de licores"],["Whisky","JW Black Label","pz","Distribuidora de licores"],
+    ["Whisky","Jack Daniel's Old No.7","pz","Distribuidora de licores"],
+    ["Cerveza","Corona","cartón","Distribuidora de cerveza"],["Cerveza","Corona Light","cartón","Distribuidora de cerveza"],
+    ["Cerveza","Corona 0","cartón","Distribuidora de cerveza"],["Cerveza","Victoria","cartón","Distribuidora de cerveza"],
+    ["Cerveza","Pacífico Clara","cartón","Distribuidora de cerveza"],["Cerveza","Pacífico Suave","cartón","Distribuidora de cerveza"],
+    ["Cerveza","Negra Modelo","cartón","Distribuidora de cerveza"],["Cerveza","Modelo Especial","cartón","Distribuidora de cerveza"],
+    ["Cerveza","Michelob Ultra","cartón","Distribuidora de cerveza"],["Cerveza","Stella Artois","cartón","Distribuidora de cerveza"],
+    ["Cerveza","Caguama Modelo Especial","pz","Distribuidora de cerveza"],["Cerveza","Caguama Corona","pz","Distribuidora de cerveza"],
+    ["Cerveza","Caguama Pacífico","pz","Distribuidora de cerveza"],["Cerveza","Flying Fish","pz","Distribuidora de cerveza"],
+    ["Refrescos","Coca Cola regular lata","reja","Coca-Cola FEMSA"],["Refrescos","Coca Cola Zero lata","reja","Coca-Cola FEMSA"],
+    ["Refrescos","Coca Cola Light vidrio","reja","Coca-Cola FEMSA"],["Refrescos","Ciel Mineral","reja","Coca-Cola FEMSA"],
+    ["Refrescos","Topo Chico","reja","Coca-Cola FEMSA"],["Refrescos","Fuze Tea negro","reja","Coca-Cola FEMSA"],
+    ["Refrescos","Sidral lata","reja","Coca-Cola FEMSA"],["Refrescos","Fresca lata","pz","Coca-Cola FEMSA"],
+    ["Refrescos","Sprite lata","pz","Coca-Cola FEMSA"],["Refrescos","Fanta lata","pz","Coca-Cola FEMSA"],
+    ["Refrescos","Félix Schorle","pz","Coca-Cola FEMSA"],
+    ["Otras bebidas","Clamato","pz","Costco"],["Otras bebidas","Concentrado de horchatas","pz","Costco"],
+    ["Otras bebidas","Jamaica","bolsa","Costco"],["Otras bebidas","Agua tónica","pz","Costco"],
+    ["Otras bebidas","Vasos para llevar","1/2 caja","Costco"],
+    ["Fruta","Naranja","pz","Central de abastos"],["Fruta","Toronja","pz","Central de abastos"],
+    ["Fruta","Hierbabuena","grs","Central de abastos"],["Fruta","Pepino","kg","Central de abastos"],
+    ["Fruta","Sandía","pz","Central de abastos"],["Fruta","Melón","pz","Central de abastos"],
+    ["Fruta","Piña","pz","Central de abastos"],["Fruta","Guayaba","grs","Central de abastos"],
+    ["Fruta","Romero","grs","Central de abastos"],["Fruta","Limón","1/2 arpilla","Central de abastos"],["Fruta","Fresa","cajita","Central de abastos"],
+    ["Insumos varios (café)","Café entero de grano","kg","Costco"],["Insumos varios (café)","Cold brew","L","Costco"],
+    ["Insumos varios (café)","Crema batida","pz","Costco"],["Insumos varios (café)","Crema de coco","pz","Costco"],
+    ["Insumos varios (café)","Jarabe natural","pz","Costco"],["Insumos varios (café)","Leche Carnation","pz","Costco"],
+    ["Insumos varios (café)","Leche deslactosada","L","Costco"],["Insumos varios (café)","Leche entera","L","Costco"],
+    ["Insumos varios (café)","Pulpa de maracuyá","kg","Costco"],["Insumos varios (café)","Azúcar","kg","Costco"],
+    ["Insumos varios (café)","Canela molida","kg","Costco"],["Insumos varios (café)","Cardamomo","kg","Costco"],
+    ["Insumos varios (café)","Agua de coco","pz","Costco"],["Insumos varios (café)","Angostura","pz","Costco"],
+    ["Insumos varios (café)","Galletas Lotus","paq","Costco"],["Insumos varios (café)","Helado de vainilla","pz","Costco"],
+    ["Insumos varios (café)","Helado de limón","pz","Costco"],["Insumos varios (café)","Frutos rojos","pz","Costco"],
+  ]),
+  "dantes-cocina": seedCatalog([
+    ["Costco","Waffles","pz","Costco"],["Costco","Vegan Smash","pz","Costco"],["Costco","Tocino","kg","Costco"],
+    ["Costco","Queso amarillo","pz","Costco"],["Costco","Queso blanco","pz","Costco"],["Costco","Queso rayado","pz","Costco"],
+    ["Costco","Mantequilla","pz","Costco"],["Costco","Mayonesa bote","pz","Costco"],["Costco","Pimienta negra","pz","Costco"],
+    ["Costco","Ginger Sesame","pz","Costco"],["Costco","Lemon Pepper","pz","Costco"],["Costco","Chile quebrado","pz","Costco"],
+    ["Costco","Harina Krusteaz","pz","Costco"],["Costco","Crotones","pz","Costco"],["Costco","Nutella","pz","Costco"],
+    ["Costco","Pan blanco Bimbo","pz","Costco"],["Costco","Guantes grandes","pz","Costco"],["Costco","Bolsa basura chica","pz","Costco"],
+    ["Costco","Bolsa basura grande","pz","Costco"],["Costco","Charola 1/2","pz","Costco"],["Costco","Salsa soya","pz","Costco"],
+    ["Costco","Azúcar moscabado","pz","Costco"],
+    ["Sam's","Crema ácida","pz","Sam's Club"],["Sam's","Vinagre","pz","Sam's Club"],["Sam's","Queso Philadelphia","pz","Sam's Club"],
+    ["Sam's","Puré de tomate","pz","Sam's Club"],["Sam's","Galleta Oreo","pz","Sam's Club"],["Sam's","Aceite bidón","pz","Sam's Club"],
+    ["Sam's","Salsa inglesa","pz","Sam's Club"],["Sam's","Jugo sazonador","pz","Sam's Club"],
+    ["Congelados","Papa francesa","pz","Proveedor de congelados"],["Congelados","Papa gajo","pz","Proveedor de congelados"],
+    ["Congelados","Papa espiral","pz","Proveedor de congelados"],["Congelados","Aros de cebolla","pz","Proveedor de congelados"],
+    ["Congelados","Dedos de queso","pz","Proveedor de congelados"],["Congelados","Jalapeños","pz","Proveedor de congelados"],
+    ["Congelados","Nugget","pz","Proveedor de congelados"],["Congelados","Catsup bolsa","pz","Proveedor de congelados"],
+    ["Congelados","Blister catsup","pz","Proveedor de congelados"],["Congelados","Blister mostaza","pz","Proveedor de congelados"],
+    ["Congelados","Blister mayonesa","pz","Proveedor de congelados"],["Congelados","Queso parmesano","pz","Proveedor de congelados"],
+    ["Congelados","Red Hot","caja","Proveedor de congelados"],["Congelados","Mostaza bolsa","pz","Proveedor de congelados"],
+    ["Salsas","BFF","pz","Por confirmar con Chef"],["Salsas","BBQ","pz","Por confirmar con Chef"],["Salsas","That","pz","Por confirmar con Chef"],
+    ["Salsas","Diablo","pz","Por confirmar con Chef"],["Salsas","Dantes","pz","Por confirmar con Chef"],
+    ["Salsas","Spicy Honey","pz","Por confirmar con Chef"],["Salsas","Honey Mustard","pz","Por confirmar con Chef"],
+    ["Salsas","Chipotle","pz","Por confirmar con Chef"],["Salsas","Infernó","pz","Por confirmar con Chef"],
+    ["Salsas","Mango Dantes","pz","Por confirmar con Chef"],["Salsas","Ranch","pz","Por confirmar con Chef"],
+    ["Plásticos","Aluminio","rollo","Proveedor de desechables"],["Plásticos","Soufflé 2oz","pz","Proveedor de desechables"],
+    ["Plásticos","Tapa 2oz","pz","Proveedor de desechables"],["Plásticos","Almeja chica","pz","Proveedor de desechables"],
+    ["Plásticos","Almeja grande","pz","Proveedor de desechables"],["Plásticos","Bolsa asa transparente","pz","Proveedor de desechables"],
+    ["Plásticos","Bolsa #6","pz","Proveedor de desechables"],["Plásticos","Bolsa #12","pz","Proveedor de desechables"],["Plásticos","Bolsa #25","pz","Proveedor de desechables"],
+    ["Verduras","Apio bolsa","pz","Central de abastos"],["Verduras","Lechuga italiana","pz","Central de abastos"],
+    ["Verduras","Cebolla","kg","Central de abastos"],["Verduras","Jitomate","kg","Central de abastos"],["Verduras","Zanahoria","kg","Central de abastos"],
+    ["Otros","Pan brioche","pz","Varios"],["Otros","Pan mini","pz","Varios"],["Otros","Papel Dante chico","pz","Varios"],
+    ["Otros","Papel Dante grande","pz","Varios"],["Otros","Rollo impresora","pz","Varios"],["Otros","Marcadores","pz","Varios"],
+    ["Otros","Engrapadora","pz","Varios"],["Otros","Grapas","caja","Varios"],
+    ["Cárnicos","Alitas","kg","Proveedor de cárnicos"],["Cárnicos","Pechuga","kg","Proveedor de cárnicos"],["Cárnicos","Carne de res","kg","Proveedor de cárnicos"],
+  ]),
+  "dantes-piso": seedCatalog([
+    ["Limpieza","Fabuloso","pz","Proveedor de limpieza"],["Limpieza","Papel higiénico","caja","Proveedor de limpieza"],
+    ["Limpieza","Sanitas","caja","Proveedor de limpieza"],["Limpieza","Servilletas de servicio","caja","Proveedor de limpieza"],
+    ["Limpieza","Jabón para manos","caja","Proveedor de limpieza"],["Limpieza","Gel antibacterial","pz","Proveedor de limpieza"],
+    ["Limpieza","Tapete para mingitorio","pz","Proveedor de limpieza"],["Limpieza","Cloro","L","Proveedor de limpieza"],
+    ["Limpieza","Fibras metálicas","pz","Proveedor de limpieza"],["Limpieza","Escobas","pz","Proveedor de limpieza"],
+    ["Limpieza","Trapeadores","pz","Proveedor de limpieza"],["Limpieza","Estropajos","pz","Proveedor de limpieza"],
+    ["Limpieza","Cubetas","pz","Proveedor de limpieza"],["Limpieza","Botes de basura","pz","Proveedor de limpieza"],
+    ["Limpieza","Bolsas de basura","caja","Proveedor de limpieza"],["Limpieza","Guantes de limpieza","pz","Proveedor de limpieza"],
+    ["Otros de piso","Cuchara cafetera","pz","Proveedor de limpieza"],["Otros de piso","Manteletas","paq","Proveedor de limpieza"],
+    ["Otros de piso","Mamilas","pz","Proveedor de limpieza"],["Otros de piso","Tenedores","pz","Proveedor de limpieza"],
+    ["Otros de piso","Servilleteros","pz","Proveedor de limpieza"],["Otros de piso","Dulces","pz","Proveedor de limpieza"],
+  ]),
+  "dantes-salsas": [], // catálogo pendiente — lo completan Chef + compras
+  "inglesa": seedCatalog([
+    ["Bebidas","Agua tónica","12 pz","Sam's"],["Limpieza","Jabón Roma","caja 10 kg","Sam's"],
+    ["Lácteos","Crema ácida","cubeta 4 L","Sam's"],["Insumos de repostería","Jarabe natural","6 pz 1L","Sam's"],
+    ["Abarrotes","Frijoles","6 pz 430 gr","Sam's"],["Abarrotes","Huevo San Juan","charola 30 pz","Sam's"],
+    ["Insumos de repostería","Nieve de vainilla","4.7 L","Sam's"],["Insumos de repostería","Nieve de chocolate","4.7 L","Sam's"],
+    ["Insumos de repostería","Mix de berries","1.36 kg","Sam's"],["Abarrotes","Hojuelas de papa","2.5 kg","Sam's"],
+    ["Bebidas","Café soluble","300 gr","Sam's"],["Limpieza","Sanitas","20 fajillas","Sam's"],["Limpieza","Papel de baño","12 rollos","Sam's"],
+    ["Desechables","Servilletas","24 fajillas","Sam's"],["Insumos de repostería","Extracto de vainilla","500 ml","Sam's"],
+    ["Limpieza","Limpiador de pisos","-","Sam's"],["Abarrotes","Nutella","1 kg","Sam's"],["Limpieza","Jabón para trastes líquido","-","Sam's"],
+    ["Abarrotes","Azúcar estándar","caja 1000 pz","Sam's"],["Abarrotes","Splenda","caja 600 sobres","Sam's"],
+    ["Abarrotes","Knorr Suiza","bote 3.5 kg","Sam's"],["Abarrotes","Sal","3 pz 1 kg","Sam's"],["Abarrotes","Aceite","20 L","Sam's"],
+    ["Abarrotes","Pesto","botella 600 gr","Sam's"],["Abarrotes","Mostaza Dijon","bote 865 gr","Sam's"],
+    ["Abarrotes","Azúcar mascabado","2 kg","Sam's"],["Limpieza","Limpia vidrios","5 L","Sam's"],["Abarrotes","Vinagre blanco","-","Sam's"],
+    ["Limpieza","Limpiador de baños","3 botes 750 ml","Sam's"],["Abarrotes","Chiles chipotles","2.8 kg","Sam's"],
+    ["Abarrotes","Papas fritas","750 gr","Sam's"],["Abarrotes","Rodajas de chile en vinagre","3 kg","Sam's"],
+    ["Bebidas","Agua de coco","6 pz 1L","Costco"],["Lácteos","Leche de coco","6 pz 1L","Costco"],["Bebidas","Jugo de naranja","6 pz 960ml","Costco"],
+    ["Bebidas","Coca light","12 pz 355ml","Costco"],["Bebidas","Coca normal","12 pz 355ml","Costco"],
+    ["Lácteos","Leche de almendra","6 pz 946ml","Costco"],["Abarrotes","Harina de almendra","1.36 kg","Costco"],
+    ["Insumos de repostería","Blueberry congelado","1.36 kg","Costco"],["Insumos de repostería","Fresas congeladas","2.72 kg","Costco"],
+    ["Abarrotes","Hummus de chipotle","550 gr","Costco"],["Abarrotes","Miel de maple","1 L","Costco"],["Abarrotes","Miel de abeja","1.8 kg","Costco"],
+    ["Lácteos","Queso suizo","1.36 kg","Costco"],["Lácteos","Queso amarillo","1.36 kg","Costco"],["Lácteos","Queso mascarpone","454 gr","Costco"],
+    ["Lácteos","Mix de quesos","2 bolsas 1.3 kg","Costco"],["Abarrotes","Mayonesa","1.9 L","Costco"],["Lácteos","Mantequilla","1.8 kg","Costco"],
+    ["Cárnicos","Pecho de cerdo","-","Costco"],["Verduras","Mix de lechuga orgánica","-","Costco"],["Limpieza","Trapos","40 pz","Costco"],
+    ["Limpieza","Bolsa para basura chica","2 L / 200 pz","Costco"],["Limpieza","Bolsa para basura grande","37.8 L / 500 pz","Costco"],
+    ["Abarrotes","Jitomate deshidratado","lata 992 gr","Costco"],["Abarrotes","Catsup","2 pz 1 kg","Costco"],
+    ["Insumos de repostería","Marqueta de chocolate","5 kg","Costco"],["Insumos de repostería","Chispas de chocolate semiamargo","2.04 kg","Costco"],
+    ["Insumos de repostería","Nueces de Castilla","1.36 kg","Costco"],["Abarrotes","Hojuelas de chile","bote 368 gr","Costco"],
+    ["Lácteos","Yogurt griego","2 pz 907 gr","Costco"],["Abarrotes","Aceituna Kalamata","907 gr","Costco"],["Abarrotes","Aceituna verde","1.5 kg","Costco"],
+    ["Abarrotes","Harina de trigo","-","Costco"],["Abarrotes","Aceite spray","2 pz 964 gr","Costco"],["Abarrotes","Alcaparra","860 gr","Costco"],
+    ["Lácteos","Queso crema","1.3 kg","Costco"],["Lácteos","Queso de cabra natural","2 paquetes","Costco"],["Cárnicos","Jamón serrano","-","Costco"],
+    ["Cárnicos","Jamón de pierna tipo York","-","Walmart Express"],["Cárnicos","Salami","-","Walmart Express"],
+    ["Cárnicos","Mortadela natural","-","Walmart Express"],["Abarrotes","Hummus de chipotle","240 gr","Walmart Express"],
+    ["Abarrotes","Chiles jalapeños en trozos","-","Walmart Express"],["Insumos de repostería","Dulce de leche","360 gr","Walmart Express"],
+    ["Abarrotes","Azúcar glass","bolsa 500 gr","Walmart Express"],["Bebidas","Dr. Pepper","600 ml","Walmart Express"],
+    ["Bebidas","Agua mineral","pieza suelta","Walmart Express"],["Lácteos","Yogurt griego sin azúcar","-","Walmart Express"],
+    ["Abarrotes","Zanahoria en escabeche","-","Walmart Express"],["Abarrotes","Pimiento en lata","-","Walmart Express"],
+    ["Abarrotes","Vinagre de jerez","-","Walmart Express"],["Abarrotes","Vinagre de manzana","500 ml","Walmart Express"],
+    ["Cárnicos","Chorizo Pamplona","-","Walmart Express"],["Cárnicos","Chorizo Salamanca","-","Walmart Express"],
+    ["Desechables","Domo mini","-","Plastimich"],["Desechables","Domo chico","-","Plastimich"],["Desechables","Domo mediano","-","Plastimich"],
+    ["Desechables","Domo grande","-","Plastimich"],["Desechables","Envase litro","-","Plastimich"],["Desechables","Envase 1/2 litro","-","Plastimich"],
+    ["Desechables","Tapas Reyma","-","Plastimich"],["Desechables","Guantes de polipapel","-","Plastimich"],["Desechables","Film","rollo 35cm","Plastimich"],
+    ["Desechables","Cucharas negras","caja 500 pz","Plastimich"],["Desechables","Tenedores negros","caja 500 pz","Plastimich"],
+    ["Desechables","Bolsa de camiseta transparente","por kilo","Plastimich"],["Desechables","Fajas para café","-","Plastimich"],
+    ["Desechables","Bolsas transparentes 40x60","rollo","Plastimich"],["Desechables","Bisagra desechable grande","-","Plastimich"],
+    ["Desechables","Bisagra desechable chica","-","Plastimich"],["Desechables","Agitadores para café","-","Plastimich"],
+    ["Desechables","Vaso 16 oz diamante","-","Plastimich"],["Desechables","Tapa 626 (16oz frío)","-","Plastimich"],
+    ["Desechables","Vaso Dart caliente 12oz","paq 50 pz","Plastimich"],["Desechables","Vaso Dart caliente 10oz","paq 50 pz","Plastimich"],
+    ["Desechables","Vaso Dart caliente 8oz","paq 50 pz","Plastimich"],["Desechables","Vaso Dart caliente 4oz","paq 50 pz","Plastimich"],
+    ["Desechables","Tapa negra 12oz","-","Plastimich"],["Desechables","Tapa negra 10oz","-","Plastimich"],["Desechables","Tapa negra 8oz","-","Plastimich"],
+    ["Desechables","Tapa blanca 4oz","-","Plastimich"],["Desechables","Vaso negro Dart 2oz","-","Plastimich"],["Desechables","Tapa transparente 2oz","-","Plastimich"],
+    ["Empaque","Bolsas de papel #6","-","Plastimich"],["Empaque","Bolsas de papel #12","-","Plastimich"],["Empaque","Bolsas de papel #16","-","Plastimich"],
+    ["Empaque","Portavasos 2 espacios","caja 300 pz","Plastimich"],["Empaque","Portavasos 4 espacios","caja 300 pz","Plastimich"],
+    ["Empaque","Bolsas de papel #6 (emergencia)","-","Plastifiesta"],["Empaque","Bolsas de papel #12 (emergencia)","-","Plastifiesta"],
+    ["Empaque","Bolsas de papel #16 (emergencia)","-","Plastifiesta"],
+    ["Empaque","Cajas para pan","blancas armables #5104","Diseños de Cartón"],
+    ["Bebidas","Coca Cola regular y light","12 pz 355ml","Mercado de Abastos"],["Empaque","Envases de cristal","300 ml","Mercado de Abastos"],
+    ["Abarrotes","Cocoa alcalina","1 kg","Mercado de Abastos"],["Abarrotes","Harina de almendra (macarrones)","1 kg","Mercado de Abastos"],
+    ["Abarrotes","Almendra fileteada","1 kg","Mercado de Abastos"],["Abarrotes","Nuez troceada","1 kg","Mercado de Abastos"],
+    ["Abarrotes","Grenetina","1 kg","Mercado de Abastos"],["Abarrotes","Azúcar mascabado","2 kg","Mercado de Abastos"],
+    ["Lácteos","Queso fresco","por kilo","La Ruana"],["Cárnicos","Longaniza","por kilo","La Ruana"],
+    ["Bebidas","Matcha","por kilo","Soy Te"],["Bebidas","Pumpkin Spice","por kilo","Soy Te"],["Bebidas","Taro","por kilo","Soy Te"],["Bebidas","Pink Masala","por kilo","Soy Te"],
+    ["Abarrotes","Azúcar mascabado","caja con sobres","Amazon"],
+    ["Insumos de repostería","Salsa de fresa","1 L","Bonil"],["Insumos de repostería","Compota de berries","1 L","Bonil"],
+    ["Insumos de repostería","Mousse de queso","1 L","Bonil"],["Insumos de repostería","Chocolate líquido","1 L","Bonil"],
+    ["Insumos de repostería","Compota de manzana","1 L","Bonil"],["Insumos de repostería","Compota de guayaba","1 L","Bonil"],
+    ["Insumos de repostería","Azúcar antihumedad","bolsa 2 kg","Bonil"],["Insumos de repostería","Brillo para fruta","cubeta 5 kg","Bonil"],
+    ["Insumos de repostería","Nuez tostada (paninis)","-","Bonil"],
+    ["Papelería","Sobres para dinero","-","Super Papelera"],["Papelería","Rollos térmicos para terminal","paq 25 rollos","Super Papelera"],
+    ["Papelería","Rollos térmicos para comandas","paq 3 rollos","Super Papelera"],["Papelería","Lapiceros","paquete","Super Papelera"],
+    ["Papelería","Plumones","paquete","Super Papelera"],["Papelería","Cinta azul","2 rollos","Super Papelera"],
+    ["Limpieza","Trapeadores","-","Realito / Artículos de Limpieza"],["Limpieza","Fibras metálicas","-","Realito / Artículos de Limpieza"],
+    ["Limpieza","Escobas","-","Realito / Artículos de Limpieza"],["Limpieza","Estropajos","-","Realito / Artículos de Limpieza"],
+    ["Limpieza","Cubetas","-","Realito / Artículos de Limpieza"],["Limpieza","Botes de basura","-","Realito / Artículos de Limpieza"],
+    ["Abarrotes","Papas a la francesa","-","Helena"],["Lácteos","Queso parmesano","-","Helena"],["Abarrotes","BBQ","-","Helena"],
+    ["Abarrotes","Hielo","bolsa 25 kg","Congeladora Inova"],
+    ["Insumos de repostería","Salsa de caramelo","1 L","Pulpa Mía"],["Insumos de repostería","Jarabe de caramelo","3.78 ml","Pulpa Mía"],
+    ["Bebidas","Matcha (emergencia)","-","Mas Sabor"],["Bebidas","Taro (emergencia)","-","Mas Sabor"],
+    ["Bebidas","Pink Masala (emergencia)","-","Mas Sabor"],["Bebidas","Pumpkin Masala (emergencia)","-","Mas Sabor"],
+    ["Empaque","Etiqueta frutos rojos","-","GC Promocional"],["Empaque","Etiqueta mascarpone nutella","-","GC Promocional"],
+    ["Empaque","Etiqueta dulce de leche","-","GC Promocional"],["Empaque","Etiqueta tiramisú","-","GC Promocional"],
+    ["Empaque","Etiqueta pastel chico","-","GC Promocional"],["Empaque","Etiqueta pastel grande","-","GC Promocional"],
+    ["Bebidas","Té de jazmín","12 pz","Te Natura"],["Bebidas","Té de jamaica","12 pz","Te Natura"],
+    ["Bebidas","Velvet Soda frambuesa","24 pz","Vinimart"],["Bebidas","Velvet Soda damasco","24 pz","Vinimart"],
+    ["Bebidas","Velvet Soda maracuyá","24 pz","Vinimart"],["Bebidas","Velvet Soda mandarina","24 pz","Vinimart"],
+  ]),
+};
+
+/* =====================================================================
+   STORE: capa db (compartida, multiusuario) con respaldo local si no
+   hay capability disponible (por ejemplo al revisar el mockup sin publicar)
+   ===================================================================== */
+
+const Store = (function(){
+  let db = null, downloads = null, ready = false;
+  const listeners = { catalog:{}, req:{}, allReqs:[], concentrados:[] };
+  const local = { catalogs:null, reqs:{}, concentrados:{} };
+
+  function loadLocal(){
+    try{
+      const raw = localStorage.getItem('concentrado_mock_v1');
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    return null;
+  }
+  function saveLocal(){
+    try{ localStorage.setItem('concentrado_mock_v1', JSON.stringify(local)); }catch(e){}
+  }
+
+  async function init(){
+    try{
+      db = firestoreDb;
+    }catch(e){}
+    ready = true;
+    if(!db){
+      const saved = loadLocal();
+      local.catalogs = (saved && saved.catalogs) || JSON.parse(JSON.stringify(CATALOGS_SEED));
+      local.reqs = (saved && saved.reqs) || {};
+      local.concentrados = (saved && saved.concentrados) || {};
+      saveLocal();
+    }
+    return { hasDb: !!db, hasDownloads: !!downloads };
+  }
+
+  function emitLocalCatalog(ref){
+    (listeners.catalog[ref]||[]).forEach(fn=>fn(local.catalogs[ref]||[]));
+  }
+  function emitLocalReq(id){
+    (listeners.req[id]||[]).forEach(fn=>fn(local.reqs[id]||null));
+  }
+  function emitLocalAll(){
+    const all = Object.values(local.reqs);
+    listeners.allReqs.forEach(fn=>fn(all));
+  }
+  function emitLocalConcentrados(){
+    const all = Object.values(local.concentrados);
+    listeners.concentrados.forEach(fn=>fn(all));
+  }
+
+  return {
+    init,
+    get hasDb(){ return !!db; },
+
+    watchCatalog(ref, cb){
+      if(db){
+        return db.collection('catalogo').doc(ref).onSnapshot(snap=>{
+          const data = snap.exists ? snap.data() : null;
+          cb((data && data.productos) || CATALOGS_SEED[ref] || []);
+        }, ()=>cb(CATALOGS_SEED[ref]||[]));
+      } else {
+        listeners.catalog[ref] = listeners.catalog[ref]||[];
+        listeners.catalog[ref].push(cb);
+        cb(local.catalogs[ref]||[]);
+        return ()=>{ listeners.catalog[ref] = listeners.catalog[ref].filter(f=>f!==cb); };
+      }
+    },
+
+    async saveCatalog(ref, productos){
+      if(db){
+        await db.doc('catalogo/'+ref).set({ productos, actualizado: new Date().toISOString() });
+      } else {
+        local.catalogs[ref] = productos; saveLocal(); emitLocalCatalog(ref);
+      }
+    },
+
+    watchRequisicion(id, cb){
+      if(db){
+        return db.doc('requisiciones/'+id).onSnapshot(snap=>{
+          cb(snap.exists ? Object.assign({id:snap.id}, snap.data()) : null);
+        }, ()=>cb(null));
+      } else {
+        listeners.req[id] = listeners.req[id]||[];
+        listeners.req[id].push(cb);
+        cb(local.reqs[id]||null);
+        return ()=>{ listeners.req[id] = listeners.req[id].filter(f=>f!==cb); };
+      }
+    },
+
+    async saveRequisicion(id, data){
+      if(db){
+        await db.doc('requisiciones/'+id).set(data);
+      } else {
+        local.reqs[id] = Object.assign({id}, data); saveLocal(); emitLocalReq(id); emitLocalAll();
+      }
+    },
+
+    watchAllRequisiciones(cb){
+      if(db){
+        return db.collection('requisiciones').orderBy('creadoEn','desc').limit(500).onSnapshot(snap=>{
+          cb(snap.docs.map(d=>Object.assign({id:d.id}, d.data())));
+        }, ()=>cb([]));
+      } else {
+        listeners.allReqs.push(cb);
+        cb(Object.values(local.reqs));
+        return ()=>{ const i=listeners.allReqs.indexOf(cb); if(i>=0) listeners.allReqs.splice(i,1); };
+      }
+    },
+
+    async createConcentrado(data){
+      const id = 'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+      if(db){
+        await db.doc('concentrados/'+id).set(data);
+      } else {
+        local.concentrados[id] = Object.assign({id}, data); saveLocal(); emitLocalConcentrados();
+      }
+      return id;
+    },
+
+    watchConcentrados(cb){
+      if(db){
+        return db.collection('concentrados').orderBy('creadoEn','desc').limit(100).onSnapshot(snap=>{
+          cb(snap.docs.map(d=>Object.assign({id:d.id}, d.data())));
+        }, ()=>cb([]));
+      } else {
+        listeners.concentrados.push(cb);
+        cb(Object.values(local.concentrados));
+        return ()=>{ const i=listeners.concentrados.indexOf(cb); if(i>=0) listeners.concentrados.splice(i,1); };
+      }
+    },
+
+    async updateConcentrado(id, data){
+      if(db){
+        await db.doc('concentrados/'+id).set(data);
+      } else {
+        local.concentrados[id] = Object.assign({id}, data); saveLocal(); emitLocalConcentrados();
+      }
+    },
+
+    async saveFile(filename, blobOrArrayBuffer){
+      const blob = blobOrArrayBuffer instanceof Blob ? blobOrArrayBuffer : new Blob([blobOrArrayBuffer]);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=> URL.revokeObjectURL(url), 4000);
+    },
+  };
+})();
+
+/* =====================================================================
+   UTILIDADES
+   ===================================================================== */
+
+function el(tag, attrs, children){
+  const e = document.createElement(tag);
+  attrs = attrs||{};
+  Object.keys(attrs).forEach(k=>{
+    if(k==='html') e.innerHTML = attrs[k];
+    else if(k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+    else if(k==='class') e.className = attrs[k];
+    else e.setAttribute(k, attrs[k]);
+  });
+  (children||[]).forEach(c=> e.appendChild(typeof c==='string' ? document.createTextNode(c) : c));
+  return e;
+}
+function fmtDateTime(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('es-MX',{day:'2-digit',month:'short'}) + ' · ' + d.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+}
+function todayKey(){
+  const d = new Date();
+  return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+}
+function slug(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+
+function inicioSemana(d){ // lunes de la semana de d, a medianoche
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const dow = (x.getDay()+6)%7; // 0=lunes
+  x.setDate(x.getDate()-dow);
+  return x;
+}
+function enPeriodo(iso, periodo, fechaRefStr){
+  if(periodo==='todos') return true;
+  if(!iso) return false;
+  const d = new Date(iso);
+  if(isNaN(d)) return false;
+  const ref = new Date(fechaRefStr+'T00:00:00');
+  if(periodo==='dia'){
+    return d.getFullYear()===ref.getFullYear() && d.getMonth()===ref.getMonth() && d.getDate()===ref.getDate();
+  }
+  if(periodo==='semana'){
+    const iniD = inicioSemana(d), iniRef = inicioSemana(ref);
+    return iniD.getTime()===iniRef.getTime();
+  }
+  if(periodo==='mes'){
+    return d.getFullYear()===ref.getFullYear() && d.getMonth()===ref.getMonth();
+  }
+  return true;
+}
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+/* =====================================================================
+   ESTADO GLOBAL
+   ===================================================================== */
+
+const State = {
+  mode: 'encargado',
+  identity: null, // {areaId, responsable}
+  currentReqId: null,
+  currentReq: null,
+  catalog: [],
+  allReqs: [],
+  comprasFiltroEmpresa: 'todas',
+  comprasFiltroEstado: 'enviada',
+  comprasPeriodo: 'todos',
+  comprasFechaRef: new Date().toISOString().slice(0,10),
+  comprasSeleccion: new Set(),
+  comprasDetalle: null,
+  concentrados: [],
+  concentradoAbiertoId: null,
+  agregarRezagadaPickerFor: null,
+  misHistorial: [],
+  misHistorialPeriodo: 'todos',
+  misHistorialFechaRef: new Date().toISOString().slice(0,10),
+  concentradosParaHistorial: [],
+  resumenPeriodo: 'mes',
+  resumenFechaRef: new Date().toISOString().slice(0,10),
+  resumenFiltroEmpresa: 'todas',
+  resumenFiltroSucursal: 'todas',
+  unsubCatalog: null,
+  unsubReq: null,
+  unsubAll: null,
+  unsubConcentrados: null,
+  unsubMisHistorialReqs: null,
+  unsubMisHistorialConcentrados: null,
+};
+
+function areaById(id){ return AREAS.find(a=>a.id===id); }
+
+/* =====================================================================
+   ONBOARDING
+   ===================================================================== */
+
+function renderOnboard(){
+  const root = document.getElementById('onboardRoot');
+  root.innerHTML = '';
+  const savedRaw = localStorage.getItem('concentrado_identity');
+  let saved = null;
+  try{ saved = savedRaw ? JSON.parse(savedRaw) : null; }catch(e){}
+  if(saved && saved.areaId && saved.responsable && State.identity===null && !State.forceOnboard){
+    State.identity = saved;
+    startIdentity();
+    return;
+  }
+  if(State.identity && !State.forceOnboard) return;
+
+  const empresaSel = el('select',{id:'obEmpresa'});
+  empresaSel.appendChild(el('option',{value:''},['Selecciona una empresa']));
+  Object.keys(EMPRESAS).forEach(k=> empresaSel.appendChild(el('option',{value:k},[EMPRESAS[k].label])));
+
+  const sucursalSel = el('select',{id:'obSucursal', disabled:'disabled'});
+  const puestoSel = el('select',{id:'obPuesto', disabled:'disabled'});
+  const nombreInput = el('input',{id:'obNombre', type:'text', placeholder:'Ej. Brenda López', disabled:'disabled'});
+  const continueBtn = el('button',{class:'btn btn-primary btn-block', disabled:'disabled'},['Continuar →']);
+
+  function refreshSucursales(){
+    const emp = empresaSel.value;
+    sucursalSel.innerHTML = '';
+    puestoSel.innerHTML = '';
+    puestoSel.disabled = true; nombreInput.disabled = true; continueBtn.disabled = true;
+    if(!emp){ sucursalSel.disabled = true; return; }
+    const sucursales = [...new Set(AREAS.filter(a=>a.empresa===emp).map(a=>a.sucursal))];
+    sucursalSel.appendChild(el('option',{value:''},['Selecciona']));
+    sucursales.forEach(s=> sucursalSel.appendChild(el('option',{value:s},[s])));
+    sucursalSel.disabled = false;
+  }
+  function refreshPuestos(){
+    const emp = empresaSel.value, suc = sucursalSel.value;
+    puestoSel.innerHTML = '';
+    nombreInput.disabled = true; continueBtn.disabled = true;
+    if(!suc){ puestoSel.disabled = true; return; }
+    const puestos = AREAS.filter(a=>a.empresa===emp && a.sucursal===suc);
+    puestoSel.appendChild(el('option',{value:''},['Selecciona']));
+    puestos.forEach(a=> puestoSel.appendChild(el('option',{value:a.id},[a.puesto])));
+    puestoSel.disabled = false;
+  }
+  function refreshContinue(){
+    nombreInput.disabled = !puestoSel.value;
+    continueBtn.disabled = !(puestoSel.value && nombreInput.value.trim().length>1);
+  }
+  empresaSel.addEventListener('change', refreshSucursales);
+  sucursalSel.addEventListener('change', refreshPuestos);
+  puestoSel.addEventListener('change', refreshContinue);
+  nombreInput.addEventListener('input', refreshContinue);
+
+  continueBtn.addEventListener('click', ()=>{
+    const identity = { areaId: puestoSel.value, responsable: nombreInput.value.trim() };
+    localStorage.setItem('concentrado_identity', JSON.stringify(identity));
+    State.identity = identity;
+    State.forceOnboard = false;
+    root.innerHTML = '';
+    startIdentity();
+  });
+
+  const cancelBtn = el('button',{class:'btn btn-ghost btn-block', style:'margin-top:8px;'},['Cancelar']);
+  cancelBtn.addEventListener('click', ()=>{
+    State.forceOnboard = false;
+    root.innerHTML = '';
+    if(State.identity){ updateIdentityChip(); } // no hubo cambios, se queda como estaba
+  });
+
+  const cardChildren = [
+    el('h2',{},['¿Quién eres hoy?']),
+    el('p',{class:'lead'},['Esto define qué catálogo de productos vas a ver y a qué requisición se suman tus productos.']),
+    el('div',{class:'field'},[el('label',{},['Empresa']), empresaSel]),
+    el('div',{class:'field'},[el('label',{},['Sucursal / área']), sucursalSel]),
+    el('div',{class:'field'},[el('label',{},['Puesto']), puestoSel]),
+    el('div',{class:'field'},[el('label',{},['Tu nombre']), nombreInput]),
+    continueBtn,
+  ];
+  if(State.identity || COMPRAS_ACCESS_ENABLED || COMPRAS_VIEW_ENABLED) cardChildren.push(cancelBtn); // ya había identidad, o tiene acceso a compras y puede regresar ahí
+
+  // Esta pantalla es un overlay a pantalla completa que tapa la barra superior — incluyendo el
+  // link "Acceso compras". Si alguien nuevo (director, contador, Elizabeth en un dispositivo
+  // limpio) abre el link normal sin el "#acceso=...", se quedaría atorado aquí sin poder llegar
+  // a ese link. Por eso lo repetimos también dentro de la tarjeta, siempre visible.
+  if(!COMPRAS_ACCESS_ENABLED && !COMPRAS_VIEW_ENABLED){
+    const accesoComprasLink = el('button',{class:'btn btn-ghost btn-block', style:'margin-top:14px;font-size:12.5px;'},['¿Eres de compras o dirección? Entrar con código de acceso']);
+    accesoComprasLink.addEventListener('click', mostrarModalAccesoCompras);
+    cardChildren.push(accesoComprasLink);
+  }
+
+  const card = el('div',{class:'onboard-card'},cardChildren);
+  root.appendChild(el('div',{class:'onboard-overlay'},[card]));
+}
+
+function startIdentity(){
+  const area = areaById(State.identity.areaId);
+  if(!area){ localStorage.removeItem('concentrado_identity'); State.identity=null; renderOnboard(); return; }
+  updateIdentityChip();
+  if(State.unsubCatalog) State.unsubCatalog();
+  State.unsubCatalog = Store.watchCatalog(area.catalogRef, (productos)=>{
+    State.catalog = productos;
+    if(State.mode==='encargado') renderEncargado();
+  });
+  const reqId = 'req_'+area.id+'_'+slug(State.identity.responsable)+'_'+todayKey();
+  State.currentReqId = reqId;
+  if(State.unsubReq) State.unsubReq();
+  State.unsubReq = Store.watchRequisicion(reqId, (data)=>{
+    if(!data){
+      data = {
+        empresa: area.empresa, sucursal: area.sucursal, puesto: area.puesto, areaId: area.id,
+        responsable: State.identity.responsable, items: [], observaciones: '', estado: 'borrador',
+        creadoEn: null, enviadaEn: null, actualizadoEn: null, concentradoId: null,
+      };
+    }
+    State.currentReq = data;
+    if(State.mode==='encargado') renderEncargado();
+  });
+  // Historial de pedidos de esta misma sucursal/puesto (no importa quién lo haya escrito ese día)
+  if(State.unsubMisHistorialReqs) State.unsubMisHistorialReqs();
+  State.unsubMisHistorialReqs = Store.watchAllRequisiciones((all)=>{
+    State.misHistorial = all.filter(r=> r.areaId===area.id && r.estado!=='borrador');
+    if(State.mode==='encargado') renderEncargado();
+  });
+  if(State.unsubMisHistorialConcentrados) State.unsubMisHistorialConcentrados();
+  State.unsubMisHistorialConcentrados = Store.watchConcentrados((all)=>{
+    State.concentradosParaHistorial = all;
+    if(State.mode==='encargado') renderEncargado();
+  });
+  renderEncargado();
+}
+
+function updateIdentityChip(){
+  const chip = document.getElementById('identityChip');
+  if(!State.identity){ chip.hidden = true; return; }
+  const area = areaById(State.identity.areaId);
+  chip.hidden = false;
+  chip.querySelector('span').innerHTML = `<strong>${State.identity.responsable}</strong> · ${EMPRESAS[area.empresa].label} · ${area.sucursal} · ${area.puesto}`;
+}
+
+document.getElementById('btnChangeIdentity').addEventListener('click', ()=>{
+  State.forceOnboard = true;
+  renderOnboard();
+});
+
+/* =====================================================================
+   VISTA ENCARGADO
+   ===================================================================== */
+
+function renderEncargado(){
+  const root = document.getElementById('viewEncargado');
+  root.innerHTML = '';
+  if(!State.identity || !State.currentReq){
+    root.appendChild(el('div',{class:'card'},[el('p',{},['Selecciona tu empresa, sucursal y puesto para comenzar.'])]));
+    return;
+  }
+  const area = areaById(State.identity.areaId);
+  const req = State.currentReq;
+  const locked = req.estado === 'en_concentrado';
+
+  const rubros = [...new Set(State.catalog.map(p=>p.rubro))];
+  const rubroSel = el('select',{id:'fRubro'});
+  rubroSel.appendChild(el('option',{value:''},['Rubro…']));
+  rubros.forEach(r=> rubroSel.appendChild(el('option',{value:r},[r])));
+
+  const productoSel = el('select',{id:'fProducto', disabled:'disabled'});
+  productoSel.appendChild(el('option',{value:''},['Selecciona un rubro primero']));
+
+  const unidadSpan = el('input',{id:'fUnidad', type:'text', readonly:'readonly', placeholder:'unidad', style:'background:var(--surface-2);'});
+  const cantidadInput = el('input',{id:'fCantidad', type:'number', min:'0', step:'0.5', placeholder:'0'});
+
+  const proveedores = [...new Set(State.catalog.filter(p=>p.proveedor).map(p=>p.proveedor))];
+  const proveedorSel = el('select',{id:'fProveedor'});
+  proveedorSel.appendChild(el('option',{value:''},['Sin especificar']));
+  proveedores.forEach(p=> proveedorSel.appendChild(el('option',{value:p},[p])));
+  proveedorSel.appendChild(el('option',{value:'__otro__'},['Otro…']));
+  const proveedorOtro = el('input',{id:'fProveedorOtro', type:'text', placeholder:'¿Cuál proveedor?', hidden:'hidden'});
+
+  rubroSel.addEventListener('change', ()=>{
+    productoSel.innerHTML = '';
+    const items = State.catalog.filter(p=>p.rubro===rubroSel.value);
+    if(!rubroSel.value){
+      productoSel.appendChild(el('option',{value:''},['Selecciona un rubro primero']));
+      productoSel.disabled = true;
+    } else {
+      productoSel.appendChild(el('option',{value:''},['Producto…']));
+      items.forEach(p=> productoSel.appendChild(el('option',{value:p.id},[p.nombre])));
+      productoSel.disabled = false;
+    }
+    unidadSpan.value = ''; proveedorSel.value=''; proveedorOtro.hidden = true;
+  });
+  productoSel.addEventListener('change', ()=>{
+    const p = State.catalog.find(x=>x.id===productoSel.value);
+    unidadSpan.value = p ? p.unidad : '';
+    if(p && p.proveedor){ proveedorSel.value = p.proveedor; } else { proveedorSel.value=''; }
+  });
+  proveedorSel.addEventListener('change', ()=>{
+    proveedorOtro.hidden = proveedorSel.value !== '__otro__';
+  });
+
+  const addBtn = el('button',{class:'btn btn-primary'},['+ Agregar a mi requisición']);
+  addBtn.addEventListener('click', async ()=>{
+    const p = State.catalog.find(x=>x.id===productoSel.value);
+    const cantidad = parseFloat(cantidadInput.value);
+    if(!p){ toast('Elige un producto del catálogo.'); return; }
+    if(!cantidad || cantidad<=0){ toast('Indica una cantidad mayor a 0.'); return; }
+    let proveedor = proveedorSel.value === '__otro__' ? proveedorOtro.value.trim() : proveedorSel.value;
+    const item = { id:'i'+Date.now()+Math.random().toString(36).slice(2,6), rubro:p.rubro, producto:p.nombre, unidad:p.unidad, cantidad, proveedor };
+    const items = (req.items||[]).concat([item]);
+    await persistReq({ items });
+    rubroSel.value=''; productoSel.innerHTML=''; productoSel.appendChild(el('option',{value:''},['Selecciona un rubro primero'])); productoSel.disabled=true;
+    unidadSpan.value=''; cantidadInput.value=''; proveedorSel.value=''; proveedorOtro.hidden=true;
+    toast('Producto agregado.');
+  });
+
+  const formCard = el('div',{class:'card'},[
+    el('div',{class:'section-title'},[el('h2',{},['Agregar producto']), el('span',{class:'meta'},[area.puesto+' · catálogo compartido'])]),
+    el('div',{class:'formrow'},[
+      el('div',{},[el('label',{style:'font-size:11px;color:var(--ink-dim);display:block;margin-bottom:5px;'},['Rubro']), rubroSel]),
+      el('div',{},[el('label',{style:'font-size:11px;color:var(--ink-dim);display:block;margin-bottom:5px;'},['Producto']), productoSel]),
+    ]),
+    el('div',{style:'height:10px'}),
+    el('div',{class:'formrow three'},[
+      el('div',{},[el('label',{style:'font-size:11px;color:var(--ink-dim);display:block;margin-bottom:5px;'},['Cantidad']), cantidadInput]),
+      el('div',{},[el('label',{style:'font-size:11px;color:var(--ink-dim);display:block;margin-bottom:5px;'},['Unidad']), unidadSpan]),
+      el('div',{},[el('label',{style:'font-size:11px;color:var(--ink-dim);display:block;margin-bottom:5px;'},['Proveedor (opcional)']), proveedorSel]),
+    ]),
+    proveedorOtro,
+    el('div',{style:'height:14px'}),
+    addBtn,
+  ]);
+  if(locked) formCard.style.opacity = .45, formCard.style.pointerEvents='none';
+
+  // ticket
+  const estadoChip = req.estado==='borrador' ? el('span',{class:'chip chip-borrador'},['Borrador'])
+    : req.estado==='enviada' ? el('span',{class:'chip chip-enviada'},['Enviada a compras'])
+    : el('span',{class:'chip chip-concentrado'},['Incluida en concentrado']);
+
+  const ticketHead = el('div',{class:'ticket-head'},[
+    el('div',{},[
+      el('div',{class:'who'},[State.identity.responsable]),
+      el('div',{class:'meta', style:'font-size:12px;color:var(--ink-dim);margin-top:2px;'},[
+        `${EMPRESAS[area.empresa].label} · ${area.sucursal} · ${area.puesto}`
+      ]),
+    ]),
+    el('div',{style:'text-align:right'},[
+      estadoChip,
+      el('div',{class:'when'},[req.enviadaEn ? ('enviada '+fmtDateTime(req.enviadaEn)) : 'aún no enviada']),
+    ]),
+  ]);
+
+  const itemsWrap = el('div',{},[]);
+  if(!req.items || req.items.length===0){
+    itemsWrap.appendChild(el('div',{class:'empty-note'},['Todavía no agregas productos. Usa el formulario de la izquierda.']));
+  } else {
+    req.items.forEach(item=>{
+      const qtyInput = el('input',{type:'number', min:'0', step:'0.5', value:item.cantidad});
+      qtyInput.addEventListener('change', async ()=>{
+        const v = parseFloat(qtyInput.value); if(!v||v<=0){ toast('Cantidad inválida.'); qtyInput.value=item.cantidad; return; }
+        const items = req.items.map(x=> x.id===item.id ? Object.assign({},x,{cantidad:v}) : x);
+        await persistReq({ items });
+      });
+      const provSel2 = el('select',{},[]);
+      provSel2.appendChild(el('option',{value:''},['Sin especificar']));
+      proveedores.forEach(p=> provSel2.appendChild(el('option',{value:p}, [p])));
+      if(item.proveedor && !proveedores.includes(item.proveedor)) provSel2.appendChild(el('option',{value:item.proveedor},[item.proveedor]));
+      provSel2.value = item.proveedor||'';
+      provSel2.addEventListener('change', async ()=>{
+        const items = req.items.map(x=> x.id===item.id ? Object.assign({},x,{proveedor:provSel2.value}) : x);
+        await persistReq({ items });
+      });
+      const delBtn = el('button',{class:'del', title:'Eliminar'},['✕']);
+      delBtn.addEventListener('click', async ()=>{
+        const items = req.items.filter(x=>x.id!==item.id);
+        await persistReq({ items });
+        toast('Producto eliminado.');
+      });
+      const row = el('div',{class:'itemline'},[
+        el('div',{class:'name'},[item.producto, el('span',{class:'rubro'},[item.rubro])]),
+        qtyInput,
+        el('div',{class:'unit'},[item.unidad]),
+        provSel2,
+        delBtn,
+      ]);
+      if(locked){ qtyInput.disabled=true; provSel2.disabled=true; delBtn.style.visibility='hidden'; }
+      itemsWrap.appendChild(row);
+    });
+  }
+
+  const obsTextarea = el('textarea',{placeholder:'Ej. "Urge la cerveza para el viernes", "el proveedor de siempre no tiene mostaza, buscar otra marca"…'},[]);
+  obsTextarea.value = req.observaciones || '';
+  if(locked) obsTextarea.disabled = true;
+  obsTextarea.addEventListener('change', async ()=>{
+    await persistReq({ observaciones: obsTextarea.value });
+    toast('Observación guardada.');
+  });
+  const obsBlock = el('div',{class:'obs-block'},[
+    el('label',{},['Observaciones generales de esta requisición (opcional)']),
+    obsTextarea,
+  ]);
+
+  const sendBtn = el('button',{class:'btn btn-primary', style:'margin-top:14px;'},[req.estado==='borrador' ? 'Enviar requisición a compras' : 'Actualizar requisición enviada']);
+  sendBtn.disabled = !(req.items && req.items.length>0) || locked;
+  sendBtn.addEventListener('click', async ()=>{
+    const patch = { estado:'enviada', actualizadoEn: new Date().toISOString() };
+    if(!req.enviadaEn) patch.enviadaEn = new Date().toISOString();
+    await persistReq(patch);
+    toast(req.estado==='borrador' ? 'Requisición enviada a compras.' : 'Cambios enviados a compras.');
+  });
+
+  const lockNote = locked ? el('div',{class:'hint-banner', style:'margin-top:14px;'},[
+      el('span',{},['🔒']),
+      el('div',{},['Esta requisición ya se incluyó en un concentrado de compras y quedó cerrada. Si necesitas pedir algo más de hoy, avisa a compras o crea una requisición adicional.']),
+    ]) : null;
+
+  const ticketCard = el('div',{class:'card'},[
+    el('div',{class:'section-title'},[el('h2',{},['Mi requisición de hoy']), el('span',{class:'meta'},[(req.items||[]).length+' producto(s)'])]),
+    el('div',{class:'ticket'},[ticketHead, itemsWrap]),
+    obsBlock,
+    sendBtn,
+    lockNote,
+  ].filter(Boolean));
+
+  root.appendChild(el('div',{class:'grid2'},[formCard, ticketCard]));
+  root.appendChild(renderMisHistorial(area));
+}
+
+function estadoPedidoLabel(r){
+  if(r.estado==='enviada') return { text:'Enviada, pendiente de concentrar', cls:'chip-enviada' };
+  if(r.estado==='en_concentrado'){
+    const c = (State.concentradosParaHistorial||[]).find(x=>x.id===r.concentradoId);
+    if(c && c.estadoCompra==='comprado') return { text:'✔ Comprado', cls:'chip-comprado' };
+    return { text:'En concentrado · comprando', cls:'chip-pendiente-compra' };
+  }
+  return { text:r.estado, cls:'chip-borrador' };
+}
+
+function renderMisHistorial(area){
+  const card = el('div',{class:'card', style:'margin-top:20px;'},[]);
+  card.appendChild(el('div',{class:'section-title'},[
+    el('h2',{},['Requisiciones enviadas de esta sucursal / puesto']),
+    el('span',{class:'meta'},[area.sucursal+' · '+area.puesto]),
+  ]));
+
+  const periodoFilter = el('select',{},[
+    el('option',{value:'todos'},['Todas las fechas']),
+    el('option',{value:'dia'},['Un día']),
+    el('option',{value:'semana'},['Una semana']),
+    el('option',{value:'mes'},['Un mes']),
+  ]);
+  periodoFilter.value = State.misHistorialPeriodo;
+  const fechaRefInput = el('input',{type:'date'});
+  fechaRefInput.value = State.misHistorialFechaRef;
+  fechaRefInput.hidden = State.misHistorialPeriodo==='todos';
+  periodoFilter.addEventListener('change', ()=>{ State.misHistorialPeriodo = periodoFilter.value; renderEncargado(); });
+  fechaRefInput.addEventListener('change', ()=>{ State.misHistorialFechaRef = fechaRefInput.value; renderEncargado(); });
+  card.appendChild(el('div',{class:'toolbar', style:'margin-bottom:6px;'},[periodoFilter, fechaRefInput]));
+
+  const lista = (State.misHistorial||[])
+    .filter(r=> r.id!==State.currentReqId)
+    .filter(r=> enPeriodo(r.enviadaEn||r.creadoEn, State.misHistorialPeriodo, State.misHistorialFechaRef))
+    .sort((a,b)=> (b.enviadaEn||b.creadoEn||'').localeCompare(a.enviadaEn||a.creadoEn||''));
+
+  if(lista.length===0){
+    card.appendChild(el('div',{class:'empty-note'},['No hay requisiciones anteriores con este filtro.']));
+    return card;
+  }
+
+  const table = el('table',{},[el('tr',{},[
+    el('th',{},['Llegó']),
+    el('th',{},['Responsable']),
+    el('th',{},['Productos']),
+    el('th',{},['Estatus']),
+  ])]);
+  lista.forEach(r=>{
+    const est = estadoPedidoLabel(r);
+    const tr = el('tr',{class:'reqrow'},[
+      el('td',{class:'mono'},[fmtDateTime(r.enviadaEn||r.creadoEn)]),
+      el('td',{},[r.responsable, r.observaciones ? el('span',{title:'Tiene observaciones', style:'margin-left:6px;'},['📝']) : '']),
+      el('td',{class:'mono'},[String((r.items||[]).length)]),
+      el('td',{},[el('span',{class:'chip '+est.cls},[est.text])]),
+    ]);
+    tr.addEventListener('click', ()=> openDetalle(r));
+    table.appendChild(tr);
+  });
+  card.appendChild(el('div',{class:'tablewrap'},[table]));
+  return card;
+}
+
+async function persistReq(patch){
+  const merged = Object.assign({}, State.currentReq, patch);
+  if(!merged.creadoEn) merged.creadoEn = new Date().toISOString();
+  merged.actualizadoEn = new Date().toISOString();
+  State.currentReq = merged;
+  await Store.saveRequisicion(State.currentReqId, merged);
+}
+
+/* =====================================================================
+   VISTA COMPRAS
+   ===================================================================== */
+
+function startCompras(){
+  if(State.unsubAll) State.unsubAll();
+  State.unsubAll = Store.watchAllRequisiciones((all)=>{
+    State.allReqs = all.filter(r=> r.items && r.items.length>0 && r.estado!=='borrador');
+    if(State.mode==='compras') renderCompras();
+  });
+  if(State.unsubConcentrados) State.unsubConcentrados();
+  State.unsubConcentrados = Store.watchConcentrados((all)=>{
+    State.concentrados = all.slice().sort((a,b)=> (b.creadoEn||'').localeCompare(a.creadoEn||''));
+    if(State.mode==='compras') renderCompras();
+  });
+  renderCompras();
+}
+
+function renderCompras(){
+  const root = document.getElementById('viewCompras');
+  root.innerHTML = '';
+
+  // Acceso de solo consulta (director / contador): nada de Requisiciones ni
+  // Catálogo — directo y fijo al Resumen ejecutivo, sin poder salir de ahí.
+  if(COMPRAS_VIEW_ENABLED && !COMPRAS_ACCESS_ENABLED){
+    State.comprasTab = 'resumen';
+    root.appendChild(el('div',{style:'margin:0 0 18px;color:var(--ink-dim);font-size:13px;'},['Acceso de solo consulta.']));
+    root.appendChild(renderResumenEjecutivo());
+    return;
+  }
+
+  const tabbar = el('div',{class:'tabbar'},[]);
+  const tabs = [['dashboard','Requisiciones'],['resumen','Resumen ejecutivo'],['catalogo','Catálogo de productos']];
+  tabs.forEach(([id,label])=>{
+    const b = el('button',{class: (State.comprasTab||'dashboard')===id?'active':''},[label]);
+    b.addEventListener('click', ()=>{ State.comprasTab = id; renderCompras(); });
+    tabbar.appendChild(b);
+  });
+  root.appendChild(tabbar);
+
+  if((State.comprasTab||'dashboard')==='catalogo'){
+    root.appendChild(renderCatalogAdmin());
+    return;
+  }
+  if((State.comprasTab||'dashboard')==='resumen'){
+    root.appendChild(renderResumenEjecutivo());
+    return;
+  }
+
+  const reqs = State.allReqs;
+  const pendientes = reqs.filter(r=>r.estado==='enviada');
+  const enConcentrado = reqs.filter(r=>r.estado==='en_concentrado');
+  const totalItems = pendientes.reduce((s,r)=>s+(r.items||[]).length,0);
+
+  root.appendChild(el('div',{class:'stat-row'},[
+    el('div',{class:'stat'},[el('div',{class:'num'},[String(pendientes.length)]), el('div',{class:'lbl'},['Requisiciones pendientes'])]),
+    el('div',{class:'stat'},[el('div',{class:'num'},[String(totalItems)]), el('div',{class:'lbl'},['Productos por concentrar'])]),
+    el('div',{class:'stat'},[el('div',{class:'num'},[String(enConcentrado.length)]), el('div',{class:'lbl'},['Ya en algún concentrado'])]),
+  ]));
+
+  const empresaFilter = el('select',{},[]);
+  ['todas',...Object.keys(EMPRESAS)].forEach(k=> empresaFilter.appendChild(el('option',{value:k},[k==='todas'?'Todas las empresas':EMPRESAS[k].label])));
+  empresaFilter.value = State.comprasFiltroEmpresa;
+  empresaFilter.addEventListener('change', ()=>{ State.comprasFiltroEmpresa = empresaFilter.value; renderCompras(); });
+
+  const estadoFilter = el('select',{},[
+    el('option',{value:'enviada'},['Pendientes de concentrar']),
+    el('option',{value:'en_concentrado'},['Ya concentradas']),
+    el('option',{value:'todas'},['Todas']),
+  ]);
+  estadoFilter.value = State.comprasFiltroEstado;
+  estadoFilter.addEventListener('change', ()=>{ State.comprasFiltroEstado = estadoFilter.value; renderCompras(); });
+
+  const periodoFilter = el('select',{},[
+    el('option',{value:'todos'},['Todas las fechas']),
+    el('option',{value:'dia'},['Un día']),
+    el('option',{value:'semana'},['Una semana']),
+    el('option',{value:'mes'},['Un mes']),
+  ]);
+  periodoFilter.value = State.comprasPeriodo;
+  const fechaRefInput = el('input',{type:'date'});
+  fechaRefInput.value = State.comprasFechaRef;
+  fechaRefInput.hidden = State.comprasPeriodo==='todos';
+  periodoFilter.addEventListener('change', ()=>{ State.comprasPeriodo = periodoFilter.value; renderCompras(); });
+  fechaRefInput.addEventListener('change', ()=>{ State.comprasFechaRef = fechaRefInput.value; renderCompras(); });
+
+  const genBtn = el('button',{class:'btn btn-primary'},['Generar concentrado', el('span',{class:'badgecount'},[String(State.comprasSeleccion.size)])]);
+  genBtn.disabled = State.comprasSeleccion.size===0;
+  genBtn.addEventListener('click', generarConcentrado);
+
+  root.appendChild(el('div',{class:'toolbar'},[empresaFilter, estadoFilter, periodoFilter, fechaRefInput, el('div',{style:'flex:1'},[]), genBtn]));
+
+  let filtered = reqs.filter(r=>{
+    if(State.comprasFiltroEmpresa!=='todas' && r.empresa!==State.comprasFiltroEmpresa) return false;
+    if(State.comprasFiltroEstado!=='todas' && r.estado!==State.comprasFiltroEstado) return false;
+    if(!enPeriodo(r.enviadaEn||r.creadoEn, State.comprasPeriodo, State.comprasFechaRef)) return false;
+    return true;
+  }).sort((a,b)=> (b.enviadaEn||'').localeCompare(a.enviadaEn||''));
+
+  const table = el('table',{},[]);
+  table.appendChild(el('tr',{},[
+    el('th',{},['']),
+    el('th',{},['Llegó']),
+    el('th',{},['Empresa']),
+    el('th',{},['Sucursal / área']),
+    el('th',{},['Puesto']),
+    el('th',{},['Responsable']),
+    el('th',{},['Productos']),
+    el('th',{},['Estado']),
+  ]));
+  if(filtered.length===0){
+    root.appendChild(el('div',{class:'empty-note'},['No hay requisiciones con este filtro todavía.']));
+  } else {
+    filtered.forEach(r=>{
+      const cb = el('input',{type:'checkbox'});
+      cb.checked = State.comprasSeleccion.has(r.id);
+      cb.disabled = r.estado!=='enviada';
+      cb.addEventListener('click', (e)=>{ e.stopPropagation();
+        if(cb.checked) State.comprasSeleccion.add(r.id); else State.comprasSeleccion.delete(r.id);
+        renderCompras();
+      });
+      const tr = el('tr',{class:'reqrow'+(State.comprasSeleccion.has(r.id)?' selected':'')},[
+        el('td',{},[cb]),
+        el('td',{class:'mono'},[fmtDateTime(r.enviadaEn||r.creadoEn)]),
+        el('td',{},[el('span',{class:'chip '+EMPRESAS[r.empresa].cls},[EMPRESAS[r.empresa].label])]),
+        el('td',{},[r.sucursal]),
+        el('td',{},[r.puesto]),
+        el('td',{},[r.responsable, r.observaciones ? el('span',{title:'Tiene observaciones', style:'margin-left:6px;'},['📝']) : '']),
+        el('td',{class:'mono'},[String((r.items||[]).length)]),
+        el('td',{},[r.estado==='enviada'? el('span',{class:'chip chip-enviada'},['Pendiente']) : el('span',{class:'chip chip-concentrado'},['Concentrada'])]),
+      ]);
+      tr.addEventListener('click', ()=> openDetalle(r));
+      table.appendChild(tr);
+    });
+  }
+  root.appendChild(el('div',{class:'tablewrap'},[table]));
+
+  const concentradosFiltrados = State.concentrados.filter(c=> enPeriodo(c.creadoEn, State.comprasPeriodo, State.comprasFechaRef));
+  if(State.concentrados.length){
+    root.appendChild(el('h2',{style:'font-size:16px;margin:28px 0 12px;'},['Historial de concentrados', el('span',{class:'meta', style:'font-weight:400;margin-left:8px;'},[concentradosFiltrados.length+' de '+State.concentrados.length+' (según el filtro de fecha de arriba)'])]));
+    if(concentradosFiltrados.length===0){
+      root.appendChild(el('div',{class:'empty-note'},['No hay concentrados en el periodo seleccionado.']));
+    }
+    concentradosFiltrados.forEach(c=>{
+      const isOpen = State.concentradoAbiertoId===c.id;
+      const details = el('details',{class:'groupblock', style:'margin-bottom:14px;'},[]);
+      if(isOpen) details.open = true;
+      const nReqs = (c.requisicionIds||[]).length;
+      details.appendChild(el('summary',{},[
+        el('span',{},[
+          fmtDateTime(c.creadoEn)+' · generado por '+(c.generadoPor||'—')+'  ',
+          c.estadoCompra==='comprado' ? el('span',{class:'chip chip-comprado'},['✔ Comprado']) : el('span',{class:'chip chip-pendiente-compra'},['Pendiente de compra']),
+        ]),
+        el('span',{class:'n'},[nReqs+' requisición(es)']),
+      ]));
+      details.addEventListener('toggle', ()=>{ State.concentradoAbiertoId = details.open ? c.id : null; });
+      if(isOpen || nReqs<=25){ // evita recomputar detalle pesado si hay muchos concentrados cerrados
+        details.appendChild(renderConcentradoDetalle(c));
+      } else {
+        const lazyBtn = el('button',{class:'btn btn-ghost', style:'margin:12px 16px;'},['Cargar detalle']);
+        lazyBtn.addEventListener('click', ()=>{ lazyBtn.replaceWith(renderConcentradoDetalle(c)); });
+        details.appendChild(lazyBtn);
+      }
+      root.appendChild(details);
+    });
+  }
+}
+
+function openDetalle(r){
+  const backdrop = el('div',{class:'drawer-backdrop'},[]);
+  backdrop.addEventListener('click', ()=> { backdrop.remove(); drawer.remove(); });
+  const closeBtn = el('button',{class:'close'},['✕']);
+  const body = el('div',{},[]);
+  (r.items||[]).forEach(it=>{
+    body.appendChild(el('div',{class:'itemline', style:'grid-template-columns:1fr 60px 70px 1fr;'},[
+      el('div',{class:'name'},[it.producto, el('span',{class:'rubro'},[it.rubro])]),
+      el('div',{class:'mono', style:'text-align:right'},[String(it.cantidad)]),
+      el('div',{class:'unit'},[it.unidad]),
+      el('div',{class:'unit'},[it.proveedor||'—']),
+    ]));
+  });
+  const obsNote = r.observaciones ? el('div',{class:'obs-note'},[el('b',{},['Observaciones']), r.observaciones]) : null;
+  const drawer = el('div',{class:'drawer'},[
+    closeBtn,
+    el('h3',{},[r.responsable]),
+    el('div',{style:'color:var(--ink-dim);font-size:12.5px;margin-bottom:16px;'},[`${EMPRESAS[r.empresa].label} · ${r.sucursal} · ${r.puesto} · llegó ${fmtDateTime(r.enviadaEn||r.creadoEn)}`]),
+    obsNote,
+    body,
+  ].filter(Boolean));
+  closeBtn.addEventListener('click', ()=> { backdrop.remove(); drawer.remove(); });
+  document.getElementById('drawerRoot').appendChild(backdrop);
+  document.getElementById('drawerRoot').appendChild(drawer);
+}
+
+async function generarConcentrado(){
+  const ids = [...State.comprasSeleccion];
+  const seleccionadas = State.allReqs.filter(r=> ids.includes(r.id));
+  if(seleccionadas.length===0) return;
+  const snapshot = seleccionadas.map(r=>({ id:r.id, empresa:r.empresa, sucursal:r.sucursal, puesto:r.puesto, responsable:r.responsable, items:r.items, observaciones:r.observaciones||'' }));
+  const data = { creadoEn: new Date().toISOString(), generadoPor: State.identity? State.identity.responsable : 'Compras', requisicionIds: ids, snapshot, estadoCompra:'pendiente', comprados:{}, montos:{} };
+  const concentradoId = await Store.createConcentrado(data);
+  for(const r of seleccionadas){
+    await Store.saveRequisicion(r.id, Object.assign({}, r, { estado:'en_concentrado', concentradoId, actualizadoEn:new Date().toISOString() }));
+  }
+  State.comprasSeleccion.clear();
+  State.concentradoAbiertoId = concentradoId;
+  toast('Concentrado generado con '+seleccionadas.length+' requisición(es).');
+  renderCompras();
+}
+
+async function quitarDeConcentrado(c, reqId){
+  const req = State.allReqs.find(r=>r.id===reqId);
+  const nuevoSnapshot = (c.snapshot||[]).filter(x=>x.id!==reqId);
+  const nuevosIds = (c.requisicionIds||[]).filter(id=>id!==reqId);
+  await Store.updateConcentrado(c.id, Object.assign({}, c, { snapshot:nuevoSnapshot, requisicionIds:nuevosIds }));
+  if(req){
+    await Store.saveRequisicion(reqId, Object.assign({}, req, { estado:'enviada', concentradoId:null, actualizadoEn:new Date().toISOString() }));
+  }
+  toast('Requisición quitada del concentrado — vuelve a estar pendiente.');
+}
+
+async function agregarAConcentrado(c, reqId){
+  const req = State.allReqs.find(r=>r.id===reqId);
+  if(!req) return;
+  if((c.requisicionIds||[]).includes(reqId)) return;
+  const nuevoItem = { id:req.id, empresa:req.empresa, sucursal:req.sucursal, puesto:req.puesto, responsable:req.responsable, items:req.items, observaciones:req.observaciones||'' };
+  const nuevoSnapshot = (c.snapshot||[]).concat([nuevoItem]);
+  const nuevosIds = (c.requisicionIds||[]).concat([reqId]);
+  await Store.updateConcentrado(c.id, Object.assign({}, c, { snapshot:nuevoSnapshot, requisicionIds:nuevosIds }));
+  await Store.saveRequisicion(reqId, Object.assign({}, req, { estado:'en_concentrado', concentradoId:c.id, actualizadoEn:new Date().toISOString() }));
+  toast('Requisición rezagada agregada al concentrado.');
+}
+
+async function guardarMontoLinea(c, lineKey, monto){
+  const montos = Object.assign({}, c.montos||{});
+  if(monto>0) montos[lineKey] = monto; else delete montos[lineKey];
+  await Store.updateConcentrado(c.id, Object.assign({}, c, { montos }));
+}
+
+function fmtMoney(n){
+  return '$'+(Number(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+async function toggleLineaComprada(c, lineKey, checked){
+  const comprados = Object.assign({}, c.comprados||{});
+  if(checked) comprados[lineKey] = true; else delete comprados[lineKey];
+  const patch = { comprados };
+  // Si ya no queda ninguna línea sin marcar, el concentrado completo pasa a "comprado" automáticamente;
+  // si se desmarca alguna, regresa a "pendiente" (salvo que compras lo haya cerrado manualmente y decida reabrirlo aparte).
+  const totalLineas = contarLineas(c.snapshot);
+  if(Object.keys(comprados).length>=totalLineas && totalLineas>0) patch.estadoCompra = 'comprado';
+  else if(c.estadoCompra==='comprado') patch.estadoCompra = 'pendiente';
+  await Store.updateConcentrado(c.id, Object.assign({}, c, patch));
+}
+
+async function toggleEstadoCompraConcentrado(c){
+  if(c.estadoCompra==='comprado'){
+    await Store.updateConcentrado(c.id, Object.assign({}, c, { estadoCompra:'pendiente' }));
+    toast('Concentrado reabierto — sigue pendiente de compra.');
+  } else {
+    // marcar todo como comprado de un jalón
+    const tree = agrupar(c.snapshot);
+    const comprados = {};
+    Object.keys(tree).forEach(empresa=> Object.keys(tree[empresa]).forEach(proveedor=> Object.keys(tree[empresa][proveedor]).forEach(rubro=>{
+      Object.keys(tree[empresa][proveedor][rubro]).forEach(key=>{ comprados[empresa+'||'+proveedor+'||'+rubro+'||'+key] = true; });
+    })));
+    await Store.updateConcentrado(c.id, Object.assign({}, c, { estadoCompra:'comprado', comprados }));
+    toast('Concentrado marcado como comprado.');
+  }
+}
+
+function contarLineas(snapshot){
+  const tree = agrupar(snapshot);
+  let n=0;
+  Object.values(tree).forEach(provs=>Object.values(provs).forEach(rubs=>Object.values(rubs).forEach(b=> n+=Object.keys(b).length)));
+  return n;
+}
+
+function agrupar(snapshot){
+  // empresa -> proveedor -> rubro -> producto+unidad -> { cantidad TOTAL, porSucursal:{ "Sucursal (puesto)": cantidad }, responsables:Set }
+  // Así compras ve de un vistazo cuánto comprar en total por proveedor, y puede abrir el desglose por sucursal si lo necesita.
+  const tree = {};
+  snapshot.forEach(r=>{
+    (r.items||[]).forEach(it=>{
+      const empresa = r.empresa, rubro = it.rubro, proveedor = it.proveedor || 'Sin proveedor asignado';
+      tree[empresa] = tree[empresa]||{};
+      tree[empresa][proveedor] = tree[empresa][proveedor]||{};
+      tree[empresa][proveedor][rubro] = tree[empresa][proveedor][rubro]||{};
+      const key = it.producto+'||'+it.unidad;
+      const bucket = tree[empresa][proveedor][rubro];
+      bucket[key] = bucket[key] || { producto:it.producto, unidad:it.unidad, cantidad:0, porSucursal:{}, responsables:new Set() };
+      const cant = Number(it.cantidad)||0;
+      bucket[key].cantidad += cant;
+      const sucLabel = r.sucursal + (r.puesto ? ' · '+r.puesto : '');
+      bucket[key].porSucursal[sucLabel] = (bucket[key].porSucursal[sucLabel]||0) + cant;
+      bucket[key].responsables.add(r.responsable);
+    });
+  });
+  return tree;
+}
+
+function renderConcentradoDetalle(c){
+  const tree = agrupar(c.snapshot);
+  const wrap = el('div',{class:'subgroup'},[]);
+  const totalLineas = contarLineas(c.snapshot);
+  const comprados = c.comprados||{};
+  const nCompradas = Object.keys(comprados).length;
+  const estaComprado = c.estadoCompra==='comprado';
+
+  const statusChip = estaComprado ? el('span',{class:'chip chip-comprado'},['✔ Comprado']) : el('span',{class:'chip chip-pendiente-compra'},[nCompradas+' / '+totalLineas+' comprado(s)']);
+  const statusBtn = el('button',{class: estaComprado ? 'btn btn-ghost' : 'btn btn-primary'},[estaComprado ? 'Reabrir concentrado' : 'Marcar todo como comprado']);
+  statusBtn.addEventListener('click', async ()=>{ statusBtn.disabled = true; await toggleEstadoCompraConcentrado(c); });
+  wrap.appendChild(el('div',{style:'display:flex;align-items:center;gap:10px;margin:14px 0;flex-wrap:wrap;'},[statusChip, statusBtn]));
+
+  const btnExcel = el('button',{class:'btn btn-ghost'},['⬇ Descargar Excel']);
+  const btnPdf = el('button',{class:'btn btn-ghost'},['⬇ Descargar PDF']);
+  btnExcel.addEventListener('click', ()=> exportExcel(tree, c));
+  btnPdf.addEventListener('click', ()=> exportPdf(tree, c));
+  wrap.appendChild(el('div',{style:'display:flex;gap:10px;margin:0 0 18px;'},[btnExcel, btnPdf]));
+
+  // --- Requisiciones incluidas: permite deshacer una inclusión por error ---
+  const reqsBlock = el('div',{class:'card', style:'margin-bottom:16px;background:var(--bg);'},[]);
+  reqsBlock.appendChild(el('h4',{style:'margin:0 0 10px;'},['Requisiciones incluidas ('+(c.snapshot||[]).length+')']));
+  (c.snapshot||[]).forEach(r=>{
+    const quitarBtn = el('button',{class:'btn btn-danger', style:'padding:5px 10px;font-size:12px;'},['Quitar']);
+    quitarBtn.addEventListener('click', async ()=>{
+      quitarBtn.disabled = true;
+      await quitarDeConcentrado(c, r.id);
+    });
+    reqsBlock.appendChild(el('div',{style:'display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px;'},[
+      el('div',{},[
+        el('span',{style:'font-weight:600;'},[r.responsable]),
+        el('span',{style:'color:var(--ink-faint);margin-left:6px;'},[`${EMPRESAS[r.empresa].label} · ${r.sucursal} · ${(r.items||[]).length} producto(s)`]),
+      ]),
+      quitarBtn,
+    ]));
+  });
+
+  // --- Agregar requisición rezagada (llegó tarde y sigue pendiente) ---
+  const pendientesFuera = State.allReqs.filter(r=> r.estado==='enviada' && !(c.requisicionIds||[]).includes(r.id));
+  const addBlock = el('div',{style:'display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap;'},[]);
+  if(pendientesFuera.length===0){
+    addBlock.appendChild(el('span',{style:'color:var(--ink-faint);font-size:12.5px;'},['No hay requisiciones pendientes rezagadas por agregar.']));
+  } else {
+    const sel = el('select',{},[]);
+    sel.appendChild(el('option',{value:''},['+ Agregar requisición rezagada…']));
+    pendientesFuera.forEach(r=> sel.appendChild(el('option',{value:r.id},[`${r.responsable} · ${EMPRESAS[r.empresa].label} · ${r.sucursal} (${(r.items||[]).length} prod.)`])));
+    const addBtn = el('button',{class:'btn btn-ghost'},['Agregar a este concentrado']);
+    addBtn.disabled = true;
+    sel.addEventListener('change', ()=>{ addBtn.disabled = !sel.value; });
+    addBtn.addEventListener('click', async ()=>{
+      if(!sel.value) return;
+      addBtn.disabled = true;
+      await agregarAConcentrado(c, sel.value);
+    });
+    addBlock.appendChild(sel); addBlock.appendChild(addBtn);
+  }
+  reqsBlock.appendChild(addBlock);
+  wrap.appendChild(reqsBlock);
+
+  const conObs = (c.snapshot||[]).filter(r=> r.observaciones && r.observaciones.trim());
+  if(conObs.length){
+    const obsDetails = el('details',{class:'groupblock', open:'open', style:'border-color:color-mix(in srgb, var(--gold) 40%, var(--line));'},[]);
+    obsDetails.appendChild(el('summary',{},[el('span',{},['📝 Observaciones de los encargados']), el('span',{class:'n'},[conObs.length+' nota(s)'])]));
+    const obsInner = el('div',{class:'subgroup'},[]);
+    conObs.forEach(r=>{
+      obsInner.appendChild(el('div',{class:'obs-note', style:'margin-bottom:8px;'},[
+        el('b',{},[`${r.responsable} · ${EMPRESAS[r.empresa].label} · ${r.sucursal}`]),
+        r.observaciones,
+      ]));
+    });
+    obsDetails.appendChild(obsInner);
+    wrap.appendChild(obsDetails);
+  }
+
+  Object.keys(tree).forEach(empresa=>{
+    let nItems=0;
+    Object.values(tree[empresa]).forEach(rubs=>Object.values(rubs).forEach(b=>nItems+=Object.keys(b).length));
+    const details = el('details',{class:'groupblock', open:'open'},[]);
+    details.appendChild(el('summary',{},[el('span',{class:'chip '+EMPRESAS[empresa].cls},[EMPRESAS[empresa].label]), el('span',{class:'n'},[nItems+' línea(s) · a comprar por proveedor'])]));
+    const inner = el('div',{class:'subgroup'},[]);
+    Object.keys(tree[empresa]).forEach(proveedor=>{
+      const copiarBtn = el('button',{class:'btn btn-ghost', style:'padding:5px 10px;font-size:12.5px;'},['📋 Copiar pedido']);
+      copiarBtn.addEventListener('click', ()=> copiarPedidoProveedor(empresa, proveedor, tree));
+      const pdfProvBtn = el('button',{class:'btn btn-ghost', style:'padding:5px 10px;font-size:12.5px;'},['⬇ PDF proveedor']);
+      pdfProvBtn.addEventListener('click', ()=> exportPedidoProveedorPdf(empresa, proveedor, tree));
+      inner.appendChild(el('div',{style:'display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:18px 0 8px;'},[
+        el('h4',{style:'margin:0;'},[proveedor]),
+        el('div',{style:'display:flex;gap:8px;'},[copiarBtn, pdfProvBtn]),
+      ]));
+      Object.keys(tree[empresa][proveedor]).forEach(rubro=>{
+        const bucket = tree[empresa][proveedor][rubro];
+        const montos = c.montos||{};
+        const t = el('table',{},[el('tr',{},[el('th',{style:'width:34px;'},['✓']),el('th',{},[rubro]),el('th',{},['Total a comprar']),el('th',{},['Desglose por sucursal / puesto']),el('th',{style:'width:110px;'},['Monto ($)'])])]);
+        Object.entries(bucket).forEach(([bucketKey,row])=>{
+          const lineKey = empresa+'||'+proveedor+'||'+rubro+'||'+bucketKey;
+          const yaComprado = !!comprados[lineKey];
+          const sucursales = Object.keys(row.porSucursal);
+          const desglose = el('div',{},[]);
+          if(sucursales.length<=1){
+            desglose.appendChild(el('span',{style:'color:var(--ink-faint);font-size:12px;'},[sucursales[0]||'—']));
+          } else {
+            sucursales.forEach(s=>{
+              desglose.appendChild(el('div',{style:'font-size:12px;color:var(--ink-dim);display:flex;justify-content:space-between;gap:10px;padding:1px 0;'},[
+                el('span',{},[s]),
+                el('span',{class:'mono'},[String(row.porSucursal[s])]),
+              ]));
+            });
+          }
+          const cb = el('input',{type:'checkbox', class:'linea-checkbox', title:'Marcar como comprado'});
+          cb.checked = yaComprado;
+          const montoInput = el('input',{type:'number', min:'0', step:'0.01', placeholder:'0.00', title:'Monto total pagado por esta línea'});
+          montoInput.style.cssText = 'width:100%;padding:6px 8px;border-radius:7px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-family:IBM Plex Mono,monospace;text-align:right;font-size:12.5px;';
+          if(montos[lineKey]) montoInput.value = montos[lineKey];
+          montoInput.addEventListener('change', async ()=>{
+            await guardarMontoLinea(c, lineKey, parseFloat(montoInput.value)||0);
+            toast('Monto guardado.');
+          });
+          cb.addEventListener('change', async ()=>{
+            cb.disabled = true;
+            await toggleLineaComprada(c, lineKey, cb.checked);
+            if(cb.checked) montoInput.focus();
+          });
+          const tr = el('tr',{class: yaComprado ? 'linea-comprada':''},[
+            el('td',{},[cb]),
+            el('td',{},[el('span',{class:'prod-nombre'},[row.producto]), el('span',{style:'display:block;color:var(--ink-faint);font-size:11px;'},[[...row.responsables].join(', ')])]),
+            el('td',{class:'mono', style:'font-size:16px;font-weight:600;white-space:nowrap;'},[String(row.cantidad)+' '+row.unidad]),
+            el('td',{},[desglose]),
+            el('td',{},[montoInput]),
+          ]);
+          t.appendChild(tr);
+        });
+        inner.appendChild(el('div',{class:'tablewrap',style:'margin-bottom:10px;'},[t]));
+      });
+    });
+    details.appendChild(inner);
+    wrap.appendChild(details);
+  });
+  return wrap;
+}
+
+/* =====================================================================
+   PEDIDO POR PROVEEDOR (copiar texto / PDF, para mandarle el pedido
+   directo al proveedor sin tener que transcribir nada a mano)
+   ===================================================================== */
+
+// Junta, en orden de rubro, todas las líneas de un proveedor dentro del
+// árbol ya agrupado (mismo árbol que usa renderConcentradoDetalle).
+function lineasPorProveedor(tree, empresa, proveedor){
+  const lineas = [];
+  const rubros = (tree[empresa] && tree[empresa][proveedor]) || {};
+  Object.keys(rubros).forEach(rubro=>{
+    Object.values(rubros[rubro]).forEach(row=>{
+      lineas.push({ rubro, producto: row.producto, unidad: row.unidad, cantidad: row.cantidad, porSucursal: row.porSucursal||{} });
+    });
+  });
+  return lineas;
+}
+
+function textoPedidoProveedor(empresa, proveedor, lineas){
+  let out = 'Pedido — '+EMPRESAS[empresa].label+'\n';
+  out += 'Proveedor: '+proveedor+'\n';
+  out += 'Fecha: '+fmtDateTime(new Date().toISOString())+'\n';
+  let rubroActual = null;
+  lineas.forEach(l=>{
+    if(l.rubro !== rubroActual){ rubroActual = l.rubro; out += '\n'+rubroActual.toUpperCase()+'\n'; }
+    out += '• '+l.producto+': '+l.cantidad+' '+l.unidad+'\n';
+    const sucursales = Object.keys(l.porSucursal);
+    if(sucursales.length>1){
+      sucursales.forEach(s=>{ out += '   - '+s+': '+l.porSucursal[s]+' '+l.unidad+'\n'; });
+    }
+  });
+  return out.trim();
+}
+
+async function copiarPedidoProveedor(empresa, proveedor, tree){
+  const lineas = lineasPorProveedor(tree, empresa, proveedor);
+  if(!lineas.length){ toast('Este proveedor no tiene líneas que copiar.'); return; }
+  const texto = textoPedidoProveedor(empresa, proveedor, lineas);
+  try{
+    await navigator.clipboard.writeText(texto);
+    toast('Pedido de "'+proveedor+'" copiado — listo para pegar en WhatsApp o correo.');
+  }catch(e){
+    toast('No se pudo copiar automáticamente. Selecciona y copia el texto manualmente.');
+  }
+}
+
+function exportPedidoProveedorPdf(empresa, proveedor, tree){
+  try{
+    const lineas = lineasPorProveedor(tree, empresa, proveedor);
+    if(!lineas.length){ toast('Este proveedor no tiene líneas que exportar.'); return; }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(14); doc.text('Pedido de compra', 14, 16);
+    doc.setFontSize(10); doc.setTextColor(90);
+    doc.text(EMPRESAS[empresa].label+' · '+proveedor, 14, 23);
+    doc.setFontSize(9); doc.setTextColor(120);
+    doc.text(fmtDateTime(new Date().toISOString()), 14, 29);
+    const rows = lineas.map(l=>{
+      const sucursales = Object.keys(l.porSucursal);
+      const desglose = sucursales.length>1 ? sucursales.map(s=> s+': '+l.porSucursal[s]).join('\n') : '';
+      return [l.rubro, l.producto, l.cantidad+' '+l.unidad, desglose];
+    });
+    doc.autoTable({ startY:36, head:[['Rubro','Producto','Total a comprar','Desglose por sucursal / puesto']], body:rows, styles:{fontSize:8}, columnStyles:{3:{cellWidth:70}}, margin:{left:14,right:14}, theme:'grid' });
+    const blob = doc.output('blob');
+    const nombreArchivo = 'pedido_'+proveedor.toLowerCase().replace(/[^a-z0-9]+/g,'_')+'_'+todayKey()+'.pdf';
+    Store.saveFile(nombreArchivo, blob)
+      .then(()=>toast('PDF del pedido guardado.'))
+      .catch(err=>toast(err.message||'No se pudo guardar el PDF.'));
+  }catch(e){ toast('Error generando PDF: '+e.message); }
+}
+
+/* =====================================================================
+   RESUMEN EJECUTIVO (totales de gasto para dirección / contabilidad)
+   ===================================================================== */
+
+function sucursalesDisponibles(){
+  // Mismo formato de etiqueta que usa agrupar(): "Sucursal · Puesto"
+  return [...new Set(AREAS.map(a=> a.sucursal+' · '+a.puesto))];
+}
+
+function calcularTotales(concentrados, filtroEmpresa, filtroSucursal){
+  filtroEmpresa = filtroEmpresa || 'todas';
+  filtroSucursal = filtroSucursal || 'todas';
+  const totales = { general:0, porRubro:{}, porProveedor:{}, porEmpresa:{}, porSucursal:{}, lineasConMonto:0, lineasTotal:0 };
+  concentrados.forEach(c=>{
+    const tree = agrupar(c.snapshot);
+    const montos = c.montos||{};
+    Object.keys(tree).forEach(empresa=>{
+      if(filtroEmpresa!=='todas' && empresa!==filtroEmpresa) return;
+      Object.keys(tree[empresa]).forEach(proveedor=>{
+        Object.keys(tree[empresa][proveedor]).forEach(rubro=>{
+          Object.entries(tree[empresa][proveedor][rubro]).forEach(([bucketKey,row])=>{
+            const lineKey = empresa+'||'+proveedor+'||'+rubro+'||'+bucketKey;
+            const monto = montos[lineKey];
+            const totalCant = row.cantidad || 0;
+
+            if(filtroSucursal==='todas'){
+              totales.lineasTotal++;
+              if(!monto) return;
+              totales.lineasConMonto++;
+              totales.general += monto;
+              totales.porRubro[rubro] = (totales.porRubro[rubro]||0) + monto;
+              totales.porProveedor[proveedor] = (totales.porProveedor[proveedor]||0) + monto;
+              totales.porEmpresa[empresa] = (totales.porEmpresa[empresa]||0) + monto;
+              // Prorrateado por sucursal según qué proporción de la cantidad total pidió cada una
+              // (el monto se captura una sola vez por línea, no por sucursal individual).
+              if(totalCant>0){
+                Object.entries(row.porSucursal).forEach(([suc,cant])=>{
+                  totales.porSucursal[suc] = (totales.porSucursal[suc]||0) + monto*(cant/totalCant);
+                });
+              }
+            } else {
+              const cantSuc = row.porSucursal[filtroSucursal] || 0;
+              if(cantSuc<=0) return; // esta línea no incluye a la sucursal filtrada
+              totales.lineasTotal++;
+              if(!monto) return;
+              totales.lineasConMonto++;
+              const parte = totalCant>0 ? monto*(cantSuc/totalCant) : 0;
+              totales.general += parte;
+              totales.porRubro[rubro] = (totales.porRubro[rubro]||0) + parte;
+              totales.porProveedor[proveedor] = (totales.porProveedor[proveedor]||0) + parte;
+              totales.porEmpresa[empresa] = (totales.porEmpresa[empresa]||0) + parte;
+              totales.porSucursal[filtroSucursal] = (totales.porSucursal[filtroSucursal]||0) + parte;
+            }
+          });
+        });
+      });
+    });
+  });
+  return totales;
+}
+
+function etiquetaPeriodo(periodo, fechaRef){
+  if(periodo==='todos') return 'Todo el historial';
+  if(periodo==='dia') return 'Día: '+fechaRef;
+  if(periodo==='semana') return 'Semana de: '+fechaRef;
+  if(periodo==='mes') return 'Mes de: '+fechaRef;
+  return periodo;
+}
+
+function renderResumenEjecutivo(){
+  const wrap = el('div',{},[]);
+  wrap.appendChild(el('p',{style:'color:var(--ink-dim);font-size:13px;margin:0 0 18px;'},['Vista para dirección y contabilidad: cuánto se ha gastado y en qué. Los montos vienen de lo que compras captura al marcar cada línea como comprada, en la pestaña "Requisiciones".']));
+
+  const periodoFilter = el('select',{},[
+    el('option',{value:'todos'},['Todo el historial']),
+    el('option',{value:'dia'},['Un día']),
+    el('option',{value:'semana'},['Una semana']),
+    el('option',{value:'mes'},['Un mes']),
+  ]);
+  periodoFilter.value = State.resumenPeriodo;
+  const fechaRefInput = el('input',{type:'date'});
+  fechaRefInput.value = State.resumenFechaRef;
+  fechaRefInput.hidden = State.resumenPeriodo==='todos';
+  periodoFilter.addEventListener('change', ()=>{ State.resumenPeriodo = periodoFilter.value; renderCompras(); });
+  fechaRefInput.addEventListener('change', ()=>{ State.resumenFechaRef = fechaRefInput.value; renderCompras(); });
+
+  const empresaFilter = el('select',{},[]);
+  ['todas',...Object.keys(EMPRESAS)].forEach(k=> empresaFilter.appendChild(el('option',{value:k},[k==='todas'?'Todas las empresas':EMPRESAS[k].label])));
+  empresaFilter.value = State.resumenFiltroEmpresa;
+  empresaFilter.addEventListener('change', ()=>{ State.resumenFiltroEmpresa = empresaFilter.value; renderCompras(); });
+
+  const sucursalFilter = el('select',{},[]);
+  sucursalFilter.appendChild(el('option',{value:'todas'},['Todas las sucursales / puestos']));
+  sucursalesDisponibles().forEach(s=> sucursalFilter.appendChild(el('option',{value:s},[s])));
+  sucursalFilter.value = State.resumenFiltroSucursal;
+  sucursalFilter.addEventListener('change', ()=>{ State.resumenFiltroSucursal = sucursalFilter.value; renderCompras(); });
+
+  wrap.appendChild(el('div',{class:'toolbar'},[periodoFilter, fechaRefInput, empresaFilter, sucursalFilter]));
+
+  const concentradosFiltrados = State.concentrados.filter(c=> enPeriodo(c.creadoEn, State.resumenPeriodo, State.resumenFechaRef));
+  const totales = calcularTotales(concentradosFiltrados, State.resumenFiltroEmpresa, State.resumenFiltroSucursal);
+
+  const contexto = {
+    periodoLabel: etiquetaPeriodo(State.resumenPeriodo, State.resumenFechaRef),
+    empresaLabel: State.resumenFiltroEmpresa==='todas' ? 'Todas las empresas' : EMPRESAS[State.resumenFiltroEmpresa].label,
+    sucursalLabel: State.resumenFiltroSucursal==='todas' ? 'Todas las sucursales / puestos' : State.resumenFiltroSucursal,
+  };
+
+  const btnExcel = el('button',{class:'btn btn-ghost'},['⬇ Descargar Excel']);
+  const btnPdf = el('button',{class:'btn btn-ghost'},['⬇ Descargar PDF']);
+  btnExcel.disabled = totales.general===0;
+  btnPdf.disabled = totales.general===0;
+  btnExcel.addEventListener('click', ()=> exportResumenExcel(totales, contexto));
+  btnPdf.addEventListener('click', ()=> exportResumenPdf(totales, contexto));
+  wrap.appendChild(el('div',{style:'display:flex;gap:10px;margin:0 0 18px;'},[btnExcel, btnPdf]));
+
+  wrap.appendChild(el('div',{class:'stat-row'},[
+    el('div',{class:'stat'},[el('div',{class:'num'},[fmtMoney(totales.general)]), el('div',{class:'lbl'},['Total gastado'])]),
+    el('div',{class:'stat'},[el('div',{class:'num'},[String(concentradosFiltrados.length)]), el('div',{class:'lbl'},['Concentrados en el periodo'])]),
+    el('div',{class:'stat'},[el('div',{class:'num'},[totales.lineasTotal ? Math.round(100*totales.lineasConMonto/totales.lineasTotal)+'%' : '—']), el('div',{class:'lbl'},['Líneas con monto capturado'])]),
+  ]));
+
+  if(totales.lineasTotal===0){
+    wrap.appendChild(el('div',{class:'empty-note'},['No hay concentrados con este filtro.']));
+    return wrap;
+  }
+  if(totales.general===0){
+    wrap.appendChild(el('div',{class:'hint-banner'},[el('span',{},['💡']), el('div',{},['Todavía no se ha capturado ningún monto. Ve a la pestaña "Requisiciones", abre un concentrado y anota el monto ($) junto a cada línea conforme la vayas comprando.'])]));
+    return wrap;
+  }
+
+  function tablaDesglose(titulo, mapa){
+    const entries = Object.entries(mapa).sort((a,b)=> b[1]-a[1]);
+    const t = el('table',{},[el('tr',{},[el('th',{},[titulo]),el('th',{},['Monto']),el('th',{},['% del total'])])]);
+    entries.forEach(([nombre,monto])=>{
+      t.appendChild(el('tr',{},[
+        el('td',{},[nombre]),
+        el('td',{class:'mono'},[fmtMoney(monto)]),
+        el('td',{class:'mono', style:'color:var(--ink-faint);'},[Math.round(100*monto/totales.general)+'%']),
+      ]));
+    });
+    return el('div',{class:'card', style:'margin-bottom:16px;'},[el('h3',{style:'font-size:15px;margin-bottom:12px;'},[titulo]), el('div',{class:'tablewrap'},[t])]);
+  }
+
+  wrap.appendChild(el('div',{class:'grid2'},[
+    tablaDesglose('Por rubro', totales.porRubro),
+    tablaDesglose('Por sucursal / puesto', totales.porSucursal),
+  ]));
+  wrap.appendChild(tablaDesglose('Por proveedor', totales.porProveedor));
+  wrap.appendChild(el('div',{style:'font-size:11.5px;color:var(--ink-faint);margin-top:-8px;'},['* El desglose por sucursal es proporcional a cuánto pidió cada una del total de esa línea (el monto se captura junto, no por sucursal individual).']));
+
+  return wrap;
+}
+
+function exportResumenExcel(totales, contexto){
+  try{
+    const wb = XLSX.utils.book_new();
+    const filas = [
+      ['Resumen ejecutivo de compras'],
+      ['Periodo', contexto.periodoLabel],
+      ['Empresa', contexto.empresaLabel],
+      ['Sucursal / puesto', contexto.sucursalLabel],
+      ['Total gastado', totales.general],
+      [],
+    ];
+    function agregarBloque(titulo, mapa){
+      filas.push([titulo, 'Monto', '% del total']);
+      Object.entries(mapa).sort((a,b)=>b[1]-a[1]).forEach(([nombre,monto])=>{
+        filas.push([nombre, monto, totales.general ? Math.round(100*monto/totales.general)+'%' : '0%']);
+      });
+      filas.push([]);
+    }
+    agregarBloque('Por rubro', totales.porRubro);
+    agregarBloque('Por sucursal / puesto', totales.porSucursal);
+    agregarBloque('Por proveedor', totales.porProveedor);
+    const ws = XLSX.utils.aoa_to_sheet(filas);
+    ws['!cols'] = [{wch:32},{wch:16},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Resumen ejecutivo');
+    const buf = XLSX.write(wb, { bookType:'xlsx', type:'array' });
+    Store.saveFile('resumen_ejecutivo_'+todayKey()+'.xlsx', new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}))
+      .then(()=>toast('Excel guardado.'))
+      .catch(err=>toast(err.message||'No se pudo guardar el Excel.'));
+  }catch(e){ toast('Error generando Excel: '+e.message); }
+}
+
+function exportResumenPdf(totales, contexto){
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(14); doc.text('Resumen ejecutivo de compras', 14, 16);
+    doc.setFontSize(9); doc.setTextColor(120);
+    doc.text('Periodo: '+contexto.periodoLabel, 14, 23);
+    doc.text('Empresa: '+contexto.empresaLabel+'  ·  Sucursal/puesto: '+contexto.sucursalLabel, 14, 28);
+    doc.setFontSize(16); doc.setTextColor(20);
+    doc.text('Total: '+fmtMoney(totales.general), 14, 38);
+    let y = 46;
+    function tabla(titulo, mapa){
+      const rows = Object.entries(mapa).sort((a,b)=>b[1]-a[1]).map(([nombre,monto])=>[
+        nombre, fmtMoney(monto), totales.general ? Math.round(100*monto/totales.general)+'%' : '0%'
+      ]);
+      if(rows.length===0) return;
+      doc.setFontSize(11); doc.setTextColor(20); doc.text(titulo, 14, y);
+      doc.autoTable({ startY:y+2, head:[[titulo,'Monto','% del total']], body:rows, styles:{fontSize:8}, margin:{left:14,right:14}, theme:'grid' });
+      y = doc.lastAutoTable.finalY + 12;
+      if(y>250){ doc.addPage(); y=20; }
+    }
+    tabla('Por rubro', totales.porRubro);
+    tabla('Por sucursal / puesto', totales.porSucursal);
+    tabla('Por proveedor', totales.porProveedor);
+    const blob = doc.output('blob');
+    Store.saveFile('resumen_ejecutivo_'+todayKey()+'.pdf', blob)
+      .then(()=>toast('PDF guardado.'))
+      .catch(err=>toast(err.message||'No se pudo guardar el PDF.'));
+  }catch(e){ toast('Error generando PDF: '+e.message); }
+}
+
+function exportExcel(tree, c){
+  try{
+    const wb = XLSX.utils.book_new();
+    const resumen = [['Empresa','Proveedor','Rubro','Producto','Unidad','Cantidad total','Desglose por sucursal / puesto','Pedido por']];
+    Object.keys(tree).forEach(empresa=>{
+      Object.keys(tree[empresa]).forEach(proveedor=>{
+        Object.keys(tree[empresa][proveedor]).forEach(rubro=>{
+          Object.values(tree[empresa][proveedor][rubro]).forEach(row=>{
+            const desglose = Object.keys(row.porSucursal).map(s=> s+': '+row.porSucursal[s]).join(' · ');
+            resumen.push([EMPRESAS[empresa].label, proveedor, rubro, row.producto, row.unidad, row.cantidad, desglose, [...row.responsables].join(', ')]);
+          });
+        });
+      });
+    });
+    const ws = XLSX.utils.aoa_to_sheet(resumen);
+    ws['!cols'] = [{wch:14},{wch:22},{wch:16},{wch:26},{wch:8},{wch:12},{wch:38},{wch:22}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Concentrado');
+
+    const obsRows = [['Responsable','Empresa','Sucursal','Observación']];
+    (c.snapshot||[]).forEach(r=>{
+      if(r.observaciones && r.observaciones.trim()) obsRows.push([r.responsable, EMPRESAS[r.empresa].label, r.sucursal, r.observaciones]);
+    });
+    if(obsRows.length>1){
+      const wsObs = XLSX.utils.aoa_to_sheet(obsRows);
+      wsObs['!cols'] = [{wch:20},{wch:14},{wch:16},{wch:60}];
+      XLSX.utils.book_append_sheet(wb, wsObs, 'Observaciones');
+    }
+
+    const buf = XLSX.write(wb, { bookType:'xlsx', type:'array' });
+    Store.saveFile('concentrado_'+todayKey()+'.xlsx', new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}))
+      .then(()=>toast('Excel guardado.'))
+      .catch(err=>toast(err.message||'No se pudo guardar el Excel.'));
+  }catch(e){ toast('Error generando Excel: '+e.message); }
+}
+
+function exportPdf(tree, c){
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(14); doc.text('Concentrado de compras', 14, 16);
+    doc.setFontSize(9); doc.setTextColor(120); doc.text(fmtDateTime(c.creadoEn), 14, 22);
+    let y = 30;
+    Object.keys(tree).forEach(empresa=>{
+      Object.keys(tree[empresa]).forEach(proveedor=>{
+        Object.keys(tree[empresa][proveedor]).forEach(rubro=>{
+          const rows = Object.values(tree[empresa][proveedor][rubro]).map(row=>{
+            const desglose = Object.keys(row.porSucursal).map(s=> s+': '+row.porSucursal[s]).join('\n');
+            return [row.producto, row.cantidad+' '+row.unidad, desglose];
+          });
+          doc.setFontSize(10); doc.setTextColor(20);
+          doc.text(`${EMPRESAS[empresa].label} · ${proveedor} · ${rubro}`, 14, y);
+          doc.autoTable({ startY:y+2, head:[['Producto','Total a comprar','Desglose por sucursal / puesto']], body:rows, styles:{fontSize:8}, columnStyles:{2:{cellWidth:90}}, margin:{left:14,right:14}, theme:'grid' });
+          y = doc.lastAutoTable.finalY + 10;
+          if(y>270){ doc.addPage(); y=20; }
+        });
+      });
+    });
+    const obsRows = (c.snapshot||[]).filter(r=>r.observaciones && r.observaciones.trim())
+      .map(r=>[r.responsable, EMPRESAS[r.empresa].label+' · '+r.sucursal, r.observaciones]);
+    if(obsRows.length){
+      if(y>250){ doc.addPage(); y=20; }
+      doc.setFontSize(11); doc.setTextColor(20); doc.text('Observaciones de los encargados', 14, y);
+      doc.autoTable({ startY:y+3, head:[['Responsable','Sucursal','Observación']], body:obsRows, styles:{fontSize:8}, columnStyles:{2:{cellWidth:110}}, margin:{left:14,right:14}, theme:'grid' });
+    }
+    const blob = doc.output('blob');
+    Store.saveFile('concentrado_'+todayKey()+'.pdf', blob)
+      .then(()=>toast('PDF guardado.'))
+      .catch(err=>toast(err.message||'No se pudo guardar el PDF.'));
+  }catch(e){ toast('Error generando PDF: '+e.message); }
+}
+
+/* =====================================================================
+   ADMIN DE CATÁLOGO
+   ===================================================================== */
+
+function renderCatalogAdmin(){
+  const wrap = el('div',{},[]);
+  wrap.appendChild(el('p',{style:'color:var(--ink-dim);font-size:13px;margin:0 0 18px;'},['Agrega, edita o elimina productos de cada catálogo. Para editar, cambia el texto y sal del campo (clic afuera o Tab) — se guarda solo. Los cambios se reflejan de inmediato en el formulario de los encargados.']));
+
+  const catalogRefs = [
+    ['tacos','Tacos de Anda'],
+    ['dantes-barra',"Dante's — Barra (Centro y Boulevard)"],
+    ['dantes-cocina',"Dante's — Cocina / producción (Centro y Boulevard)"],
+    ['dantes-piso',"Dante's — Piso / limpieza (Centro y Boulevard)"],
+    ['dantes-salsas',"Dante's — Insumos para salsas (Chef)"],
+    ['inglesa','La Inglesa — cafetería, panadería y repostería'],
+  ];
+
+  catalogRefs.forEach(([ref,label])=>{
+    const details = el('details',{class:'groupblock'},[]);
+    const productos = [];
+    const body = el('div',{class:'subgroup'},[]);
+    const listWrap = el('div',{},[]);
+    details.appendChild(el('summary',{},[label, el('span',{class:'n'},['cargando…'])]));
+    details.appendChild(body);
+    body.appendChild(listWrap);
+
+    const unsub = Store.watchCatalog(ref, (items)=>{
+      details.querySelector('summary .n').textContent = items.length+' producto(s)';
+      listWrap.innerHTML='';
+      if(items.length===0){
+        listWrap.appendChild(el('div',{class:'empty-note'},['Catálogo vacío — el Chef y compras lo llenarán aquí.']));
+      } else {
+        listWrap.appendChild(el('div',{class:'catalog-admin-row head'},[el('div',{},['Producto']),el('div',{},['Rubro']),el('div',{},['Unidad']),el('div',{},['Proveedor']),el('div',{},[''])]));
+        items.forEach(p=>{
+          const fNombre = el('input',{type:'text', value:p.nombre});
+          const fRubro = el('input',{type:'text', value:p.rubro});
+          const fUnidad = el('input',{type:'text', value:p.unidad});
+          const fProveedor = el('input',{type:'text', value:p.proveedor||'', placeholder:'—'});
+
+          async function guardarCambio(campo, input, obligatorio){
+            const valor = input.value.trim();
+            if(obligatorio && !valor){ toast('Este campo no puede quedar vacío.'); input.value = p[campo]; return; }
+            if(valor === (p[campo]||'')) return; // sin cambios reales
+            const actualizados = items.map(x=> x.id===p.id ? Object.assign({}, x, { [campo]: valor }) : x);
+            await Store.saveCatalog(ref, actualizados);
+            toast('Producto actualizado.');
+          }
+          fNombre.addEventListener('change', ()=> guardarCambio('nombre', fNombre, true));
+          fRubro.addEventListener('change', ()=> guardarCambio('rubro', fRubro, true));
+          fUnidad.addEventListener('change', ()=> guardarCambio('unidad', fUnidad, true));
+          fProveedor.addEventListener('change', ()=> guardarCambio('proveedor', fProveedor, false));
+
+          const delBtn = el('button',{class:'del', title:'Eliminar producto'},['✕']);
+          delBtn.addEventListener('click', async ()=>{
+            if(!confirm('¿Eliminar "'+p.nombre+'" del catálogo?')) return;
+            await Store.saveCatalog(ref, items.filter(x=>x.id!==p.id));
+            toast('Producto eliminado del catálogo.');
+          });
+
+          const row = el('div',{class:'catalog-admin-row'},[
+            el('div',{},[fNombre]), el('div',{},[fRubro]), el('div',{},[fUnidad]), el('div',{},[fProveedor]),
+            delBtn,
+          ]);
+          listWrap.appendChild(row);
+        });
+      }
+      productos.length = 0; productos.push(...items);
+    });
+
+    const addRubro = el('input',{type:'text', placeholder:'Rubro'});
+    const addNombre = el('input',{type:'text', placeholder:'Producto'});
+    const addUnidad = el('input',{type:'text', placeholder:'Unidad'});
+    const addProveedor = el('input',{type:'text', placeholder:'Proveedor (opcional)'});
+    const addBtn = el('button',{class:'btn btn-ghost'},['+ Agregar producto']);
+    addBtn.addEventListener('click', async ()=>{
+      if(!addRubro.value.trim() || !addNombre.value.trim() || !addUnidad.value.trim()){ toast('Rubro, producto y unidad son obligatorios.'); return; }
+      const nuevo = { id:'p'+Date.now()+Math.random().toString(36).slice(2,6), rubro:addRubro.value.trim(), nombre:addNombre.value.trim(), unidad:addUnidad.value.trim(), proveedor:addProveedor.value.trim() };
+      await Store.saveCatalog(ref, productos.concat([nuevo]));
+      addRubro.value=''; addNombre.value=''; addUnidad.value=''; addProveedor.value='';
+      toast('Producto agregado al catálogo.');
+    });
+    body.appendChild(el('div',{style:'display:grid;grid-template-columns:1fr 1.4fr 0.8fr 1.2fr auto;gap:8px;margin-top:14px;'},[addRubro,addNombre,addUnidad,addProveedor,addBtn]));
+
+    wrap.appendChild(details);
+  });
+
+  return wrap;
+}
+
+/* =====================================================================
+   MODO SWITCH + ARRANQUE
+   ===================================================================== */
+
+function irAVistaCompras(){
+  State.mode = 'compras';
+  document.querySelectorAll('#modeSwitch button').forEach(b=> b.classList.toggle('active', b.dataset.mode==='compras'));
+  document.getElementById('viewEncargado').hidden = true;
+  document.getElementById('viewCompras').hidden = false;
+  startCompras();
+}
+
+function actualizarBotonAccesoCompras(){
+  const btn = document.getElementById('btnAccesoCompras');
+  if(btn) btn.hidden = COMPRAS_ACCESS_ENABLED || COMPRAS_VIEW_ENABLED;
+}
+
+document.getElementById('modeSwitch').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-mode]');
+  if(!btn) return;
+  State.mode = btn.dataset.mode;
+  document.querySelectorAll('#modeSwitch button').forEach(b=>b.classList.toggle('active', b===btn));
+  document.getElementById('viewEncargado').hidden = State.mode!=='encargado';
+  document.getElementById('viewCompras').hidden = State.mode!=='compras';
+  if(State.mode==='compras'){ startCompras(); }
+  else if(State.mode==='encargado' && !State.identity){ renderOnboard(); }
+});
+
+function mostrarModalAccesoCompras(){
+  const input = el('input',{type:'password', placeholder:'Código de acceso'});
+  input.style.width='100%'; input.style.padding='10px 12px'; input.style.borderRadius='9px';
+  input.style.border='1px solid var(--line-strong)'; input.style.background='var(--surface)';
+  input.style.color='var(--ink)'; input.style.fontSize='14px'; input.style.fontFamily='inherit';
+
+  const errorMsg = el('div',{style:'color:var(--danger);font-size:12.5px;margin-top:8px;min-height:16px;'},[]);
+
+  function cerrar(){ overlay.remove(); }
+  function intentar(){
+    const valor = input.value.trim();
+    if(valor === COMPRAS_ACCESS_TOKEN){
+      localStorage.setItem(COMPRAS_ACCESS_KEY, '1');
+      COMPRAS_ACCESS_ENABLED = true;
+      const btnCompras = document.querySelector('#modeSwitch button[data-mode="compras"]');
+      if(btnCompras) btnCompras.hidden = false;
+      actualizarBotonAccesoCompras();
+      cerrar();
+      // Cierra cualquier ventana de "¿Quién eres hoy?" que estuviera abierta y pasa a compras.
+      document.getElementById('onboardRoot').innerHTML = '';
+      irAVistaCompras();
+      toast('Acceso de compras habilitado en este dispositivo.');
+    } else if(valor === COMPRAS_VIEW_TOKEN){
+      localStorage.setItem(COMPRAS_VIEW_KEY, '1');
+      COMPRAS_VIEW_ENABLED = true;
+      const btnCompras = document.querySelector('#modeSwitch button[data-mode="compras"]');
+      if(btnCompras) btnCompras.hidden = false;
+      actualizarBotonAccesoCompras();
+      cerrar();
+      document.getElementById('onboardRoot').innerHTML = '';
+      irAVistaCompras();
+      toast('Acceso de solo consulta habilitado en este dispositivo.');
+    } else {
+      errorMsg.textContent = 'Código incorrecto, intenta de nuevo.';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  const entrarBtn = el('button',{class:'btn btn-primary btn-block', style:'margin-top:14px;'},['Entrar']);
+  entrarBtn.addEventListener('click', intentar);
+  input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') intentar(); });
+  const cancelarBtn = el('button',{class:'btn btn-ghost btn-block', style:'margin-top:8px;'},['Cancelar']);
+  cancelarBtn.addEventListener('click', cerrar);
+
+  const card = el('div',{class:'onboard-card', style:'max-width:360px;'},[
+    el('h2',{style:'font-size:19px;'},['Acceso de compras']),
+    el('p',{class:'lead'},['Escribe el código que te compartieron para entrar al panel de compras corporativo.']),
+    el('div',{class:'field'},[el('label',{},['Código de acceso']), input]),
+    errorMsg,
+    entrarBtn,
+    cancelarBtn,
+  ]);
+  const overlay = el('div',{class:'onboard-overlay'},[card]);
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay) cerrar(); });
+  document.body.appendChild(overlay);
+  input.focus();
+}
+
+document.getElementById('btnAccesoCompras').addEventListener('click', mostrarModalAccesoCompras);
+
+(async function(){
+  const accesoCompras = habilitarAccesoComprasSiAplica();
+  actualizarBotonAccesoCompras();
+  await Store.init();
+  const yaTieneIdentidadEncargado = !!localStorage.getItem('concentrado_identity');
+  if(accesoCompras && !yaTieneIdentidadEncargado){
+    // Quien entra con el link de compras y todavía no ha usado la app como encargado
+    // va directo al panel de compras, sin que la pantalla "¿Quién eres hoy?" se lo tape.
+    irAVistaCompras();
+  } else {
+    renderOnboard();
+  }
+})();
+</script>
+</body>
+</html>
