@@ -1666,7 +1666,14 @@ function renderConcentradoDetalle(c){
     details.appendChild(el('summary',{},[el('span',{class:'chip '+EMPRESAS[empresa].cls},[EMPRESAS[empresa].label]), el('span',{class:'n'},[nItems+' línea(s) · a comprar por proveedor'])]));
     const inner = el('div',{class:'subgroup'},[]);
     Object.keys(tree[empresa]).forEach(proveedor=>{
-      inner.appendChild(el('h4',{},[proveedor]));
+      const copiarBtn = el('button',{class:'btn btn-ghost', style:'padding:5px 10px;font-size:12.5px;'},['📋 Copiar pedido']);
+      copiarBtn.addEventListener('click', ()=> copiarPedidoProveedor(empresa, proveedor, tree));
+      const pdfProvBtn = el('button',{class:'btn btn-ghost', style:'padding:5px 10px;font-size:12.5px;'},['⬇ PDF proveedor']);
+      pdfProvBtn.addEventListener('click', ()=> exportPedidoProveedorPdf(empresa, proveedor, tree));
+      inner.appendChild(el('div',{style:'display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:18px 0 8px;'},[
+        el('h4',{style:'margin:0;'},[proveedor]),
+        el('div',{style:'display:flex;gap:8px;'},[copiarBtn, pdfProvBtn]),
+      ]));
       Object.keys(tree[empresa][proveedor]).forEach(rubro=>{
         const bucket = tree[empresa][proveedor][rubro];
         const montos = c.montos||{};
@@ -1716,6 +1723,77 @@ function renderConcentradoDetalle(c){
     wrap.appendChild(details);
   });
   return wrap;
+}
+
+/* =====================================================================
+   PEDIDO POR PROVEEDOR (copiar texto / PDF, para mandarle el pedido
+   directo al proveedor sin tener que transcribir nada a mano)
+   ===================================================================== */
+
+// Junta, en orden de rubro, todas las líneas de un proveedor dentro del
+// árbol ya agrupado (mismo árbol que usa renderConcentradoDetalle).
+function lineasPorProveedor(tree, empresa, proveedor){
+  const lineas = [];
+  const rubros = (tree[empresa] && tree[empresa][proveedor]) || {};
+  Object.keys(rubros).forEach(rubro=>{
+    Object.values(rubros[rubro]).forEach(row=>{
+      lineas.push({ rubro, producto: row.producto, unidad: row.unidad, cantidad: row.cantidad, porSucursal: row.porSucursal||{} });
+    });
+  });
+  return lineas;
+}
+
+function textoPedidoProveedor(empresa, proveedor, lineas){
+  let out = 'Pedido — '+EMPRESAS[empresa].label+'\n';
+  out += 'Proveedor: '+proveedor+'\n';
+  out += 'Fecha: '+fmtDateTime(new Date().toISOString())+'\n';
+  let rubroActual = null;
+  lineas.forEach(l=>{
+    if(l.rubro !== rubroActual){ rubroActual = l.rubro; out += '\n'+rubroActual.toUpperCase()+'\n'; }
+    out += '• '+l.producto+': '+l.cantidad+' '+l.unidad+'\n';
+    const sucursales = Object.keys(l.porSucursal);
+    if(sucursales.length>1){
+      sucursales.forEach(s=>{ out += '   - '+s+': '+l.porSucursal[s]+' '+l.unidad+'\n'; });
+    }
+  });
+  return out.trim();
+}
+
+async function copiarPedidoProveedor(empresa, proveedor, tree){
+  const lineas = lineasPorProveedor(tree, empresa, proveedor);
+  if(!lineas.length){ toast('Este proveedor no tiene líneas que copiar.'); return; }
+  const texto = textoPedidoProveedor(empresa, proveedor, lineas);
+  try{
+    await navigator.clipboard.writeText(texto);
+    toast('Pedido de "'+proveedor+'" copiado — listo para pegar en WhatsApp o correo.');
+  }catch(e){
+    toast('No se pudo copiar automáticamente. Selecciona y copia el texto manualmente.');
+  }
+}
+
+function exportPedidoProveedorPdf(empresa, proveedor, tree){
+  try{
+    const lineas = lineasPorProveedor(tree, empresa, proveedor);
+    if(!lineas.length){ toast('Este proveedor no tiene líneas que exportar.'); return; }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(14); doc.text('Pedido de compra', 14, 16);
+    doc.setFontSize(10); doc.setTextColor(90);
+    doc.text(EMPRESAS[empresa].label+' · '+proveedor, 14, 23);
+    doc.setFontSize(9); doc.setTextColor(120);
+    doc.text(fmtDateTime(new Date().toISOString()), 14, 29);
+    const rows = lineas.map(l=>{
+      const sucursales = Object.keys(l.porSucursal);
+      const desglose = sucursales.length>1 ? sucursales.map(s=> s+': '+l.porSucursal[s]).join('\n') : '';
+      return [l.rubro, l.producto, l.cantidad+' '+l.unidad, desglose];
+    });
+    doc.autoTable({ startY:36, head:[['Rubro','Producto','Total a comprar','Desglose por sucursal / puesto']], body:rows, styles:{fontSize:8}, columnStyles:{3:{cellWidth:70}}, margin:{left:14,right:14}, theme:'grid' });
+    const blob = doc.output('blob');
+    const nombreArchivo = 'pedido_'+proveedor.toLowerCase().replace(/[^a-z0-9]+/g,'_')+'_'+todayKey()+'.pdf';
+    Store.saveFile(nombreArchivo, blob)
+      .then(()=>toast('PDF del pedido guardado.'))
+      .catch(err=>toast(err.message||'No se pudo guardar el PDF.'));
+  }catch(e){ toast('Error generando PDF: '+e.message); }
 }
 
 /* =====================================================================
